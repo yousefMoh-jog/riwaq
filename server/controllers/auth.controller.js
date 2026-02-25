@@ -23,12 +23,6 @@ export async function requestOtp(req, res) {
       .toString()
       .trim();
 
-    if (fullName.length < 2) {
-      return res.status(400).json({
-        ok: false,
-        messageAr: "الاسم الكامل يجب أن يكون حرفين على الأقل",
-      });
-    }
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
       return res
         .status(400)
@@ -39,11 +33,6 @@ export async function requestOtp(req, res) {
         ok: false,
         messageAr: "كلمة المرور يجب أن تكون على الأقل 8 أحرف",
       });
-    }
-    if (!["preparatory", "secondary", "university"].includes(educationalLevel)) {
-      return res
-        .status(400)
-        .json({ ok: false, messageAr: "المستوى التعليمي غير صالح" });
     }
     const phoneE164 = normalizeLibyaPhone(phoneRaw);
     if (!phoneE164) {
@@ -60,6 +49,18 @@ export async function requestOtp(req, res) {
         return res
           .status(400)
           .json({ ok: false, messageAr: "كلمة المرور غير صحيحة" });
+      }
+    } else {
+      if (fullName.length < 2) {
+        return res.status(400).json({
+          ok: false,
+          messageAr: "الاسم الكامل يجب أن يكون حرفين على الأقل",
+        });
+      }
+      if (!["preparatory", "secondary", "university"].includes(educationalLevel)) {
+        return res
+          .status(400)
+          .json({ ok: false, messageAr: "المستوى التعليمي غير صالح" });
       }
     }
 

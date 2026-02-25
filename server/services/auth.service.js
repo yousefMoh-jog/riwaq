@@ -31,7 +31,7 @@ export function signAccessToken(user) {
   return jwt.sign(
     { sub: user.id, role: user.role ?? "STUDENT" },
     getJwtSecret(),
-    { expiresIn: "15m" }
+    { expiresIn: "7d" }
   );
 }
 

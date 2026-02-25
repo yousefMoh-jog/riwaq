@@ -11,6 +11,7 @@ const OTP_LENGTH = 4;
 
 export function RiwaqAuthPage() {
   const { loginWithOtp, clearError, error: authError } = useAuth();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +42,7 @@ export function RiwaqAuthPage() {
   const emailValid = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim());
   const passwordValid = password.length >= 8;
   const displayPhone = phoneE164 ? formatLibyaPhoneDisplay(phoneE164) : '';
-  const canSubmitRequest = fullNameValid && emailValid && passwordValid && validation.ok && !!validation.e164;
+  const canSubmitRequest = (mode === 'login' || fullNameValid) && emailValid && passwordValid && validation.ok && !!validation.e164;
 
   const clearLocalError = useCallback(() => {
     setError(null);
@@ -76,12 +77,12 @@ export function RiwaqAuthPage() {
       clearLocalError();
       if (submitLock.current) return;
 
-      const nameToUse = (fullNameRef.current ?? '').trim();
+      const nameToUse = mode === 'login' ? '' : (fullNameRef.current ?? '').trim();
       const emailToUse = (emailRef.current ?? '').trim();
       const passwordToUse = passwordRef.current ?? '';
       const phoneToUse = (phoneRef.current ?? '').trim();
 
-      if (nameToUse.length < 2) {
+      if (mode === 'register' && nameToUse.length < 2) {
         setError('الاسم الكامل يجب أن يكون حرفين على الأقل');
         return;
       }
@@ -102,7 +103,7 @@ export function RiwaqAuthPage() {
       submitLock.current = true;
       setLoading(true);
       try {
-        const res = await authService.requestOtp(nameToUse, emailToUse, passwordToUse, phoneToUse, educationalLevelRef.current);
+        const res = await authService.requestOtp(nameToUse, emailToUse, passwordToUse, phoneToUse, mode === 'login' ? 'secondary' : educationalLevelRef.current);
         if (!res.ok) {
           setError(res.messageAr);
           return;
@@ -118,20 +119,20 @@ export function RiwaqAuthPage() {
         submitLock.current = false;
       }
     },
-    [clearLocalError]
+    [mode, clearLocalError]
   );
 
   const handleResendOtp = useCallback(async () => {
     if (resendCountdown > 0 || !phoneE164 || submitLock.current) return;
-    const nameToUse = (fullNameRef.current ?? '').trim();
+    const nameToUse = mode === 'login' ? '' : (fullNameRef.current ?? '').trim();
     const emailToUse = (emailRef.current ?? '').trim();
     const passwordToUse = passwordRef.current ?? '';
-    if (nameToUse.length < 2 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailToUse) || !passwordToUse || passwordToUse.length < 8) return;
+    if ((mode === 'register' && nameToUse.length < 2) || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailToUse) || !passwordToUse || passwordToUse.length < 8) return;
     clearLocalError();
     submitLock.current = true;
     setLoading(true);
     try {
-      const res = await authService.requestOtp(nameToUse, emailToUse, passwordToUse, phoneRef.current ?? '', educationalLevelRef.current);
+      const res = await authService.requestOtp(nameToUse, emailToUse, passwordToUse, phoneRef.current ?? '', mode === 'login' ? 'secondary' : educationalLevelRef.current);
       if (res.ok) {
         setResendCountdown(RESEND_COOLDOWN_SEC);
       } else {
@@ -143,7 +144,7 @@ export function RiwaqAuthPage() {
       setLoading(false);
       submitLock.current = false;
     }
-  }, [phoneE164, resendCountdown, clearLocalError]);
+  }, [mode, phoneE164, resendCountdown, clearLocalError]);
 
   const handleVerifyOtp = useCallback(
     async (e: React.FormEvent) => {
@@ -195,7 +196,7 @@ export function RiwaqAuthPage() {
             <img src={logo} alt="رِواق" className="h-16 mx-auto" />
           </Link>
           <p className="text-primary-foreground/80 mt-4">
-            {step === 'form' ? 'أدخل بياناتك لتسجيل الدخول أو إنشاء حساب' : 'أدخل رمز التحقق المرسل إليك'}
+            {step === 'otp' ? 'أدخل رمز التحقق المرسل إليك' : mode === 'login' ? 'أدخل بياناتك لتسجيل الدخول' : 'أنشئ حسابك الجديد'}
           </p>
         </div>
 
@@ -208,6 +209,25 @@ export function RiwaqAuthPage() {
               }}
               className="space-y-4"
             >
+              {/* Tab bar */}
+              <div className="flex rounded-lg overflow-hidden border border-border mb-2">
+                <button
+                  type="button"
+                  onClick={() => { setMode('login'); setError(null); clearError(); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'login' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                  تسجيل الدخول
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setMode('register'); setError(null); clearError(); }}
+                  className={`flex-1 py-2 text-sm font-medium transition-colors ${mode === 'register' ? 'bg-primary text-primary-foreground' : 'bg-transparent text-muted-foreground hover:text-foreground'}`}
+                >
+                  إنشاء حساب
+                </button>
+              </div>
+
+              {mode === 'register' && (
               <div>
                 <label className="block text-sm mb-2">الاسم الكامل</label>
                 <input
@@ -224,6 +244,7 @@ export function RiwaqAuthPage() {
                   <p className="text-xs text-destructive mt-1" role="alert">الاسم الكامل يجب أن يكون حرفين على الأقل</p>
                 )}
               </div>
+              )}
 
               <div>
                 <label className="block text-sm mb-2">البريد الإلكتروني</label>
@@ -287,6 +308,7 @@ export function RiwaqAuthPage() {
                 )}
               </div>
 
+              {mode === 'register' && (
               <div>
                 <label className="block text-sm mb-2">المستوى التعليمي</label>
                 <select
@@ -302,6 +324,7 @@ export function RiwaqAuthPage() {
                   <option value="university">جامعي</option>
                 </select>
               </div>
+              )}
 
               {!validation.ok && validation.messageAr && (
                 <p className="text-sm text-destructive" role="alert">

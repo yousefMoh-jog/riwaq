@@ -232,6 +232,9 @@ export async function ensureMigrations() {
     await tryStep(client, "orders.coupon_id col",         "ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_id TEXT");
     await tryStep(client, "orders.total_amount col",      "ALTER TABLE orders ADD COLUMN IF NOT EXISTS total_amount NUMERIC(10,2) NOT NULL DEFAULT 0");
     await tryStep(client, "orders.status col",            "ALTER TABLE orders ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'");
+    await tryStep(client, "orders.discount_amount col",   "ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(10,2) NOT NULL DEFAULT 0");
+    await tryStep(client, "orders.updated_at col",        "ALTER TABLE orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()");
+    await tryStep(client, "orders.updated_at default",    "ALTER TABLE orders ALTER COLUMN updated_at SET DEFAULT NOW()");
 
     // video_assets patches
     await tryStep(client, "video_assets.status col",      "ALTER TABLE video_assets ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending'");

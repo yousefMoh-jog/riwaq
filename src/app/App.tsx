@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AnimatePresence } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
 import { RiwaqHomePage } from './pages/RiwaqHomePage';
 import { RiwaqCoursesPage } from './pages/RiwaqCoursesPage';
 import { RiwaqAuthPage } from './pages/RiwaqAuthPage';
@@ -23,14 +24,19 @@ import { CheckoutPage } from '../pages/CheckoutPage';
 import { PaymentSuccessPage } from '../pages/PaymentSuccessPage';
 
 export default function App() {
+  const { isLoading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
 
+  // Wait for the auth session restoration check to finish before starting
+  // the splash timer, so we never flash unauthenticated content to a
+  // returning user whose token is stored in localStorage.
   useEffect(() => {
+    if (isLoading) return;
     const timer = setTimeout(() => {
       setShowSplash(false);
     }, 2200);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isLoading]);
 
   return (
     <>
