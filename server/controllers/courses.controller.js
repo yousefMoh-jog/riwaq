@@ -310,10 +310,10 @@ export async function completeLesson(req, res) {
     // Upsert: always marks the lesson as complete (idempotent).
     // ID generated in JS via randomUUID() — no uuid-ossp extension required.
     const { rows: upserted } = await pool.query(
-      `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at)
-       VALUES ($1, $2, $3, $4, NOW())
+      `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at, updated_at)
+       VALUES ($1, $2::uuid, $3, $4, NOW(), NOW())
        ON CONFLICT (user_id, lesson_id)
-       DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id
+       DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id, updated_at = NOW()
        RETURNING completed_at`,
       [randomUUID(), userId, lessonId, courseId]
     );
@@ -328,10 +328,19 @@ export async function completeLesson(req, res) {
       messageAr: "تم تسجيل اكتمال الدرس",
     });
   } catch (err) {
-    console.error('[completeLesson] error:', err.message, err.detail ?? '');
+    console.error("═══ completeLesson FATAL ERROR ═══");
+    console.error("  Message   :", err.message);
+    console.error("  PG Code   :", err.code);         // 42804=type mismatch, 23502=NOT NULL, 23505=UNIQUE
+    console.error("  Constraint:", err.constraint);
+    console.error("  Table     :", err.table);
+    console.error("  Column    :", err.column);
+    console.error("  Detail    :", err.detail);
+    console.error("  Params    : userId=%s lessonId=%s", req.auth?.userId, req.params?.id);
+    console.error("  Stack     :", err.stack);
+    console.error("══════════════════════════════════");
     return res
       .status(500)
-      .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
+      .json({ ok: false, messageAr: "حدث خطأ في السيرفر", _debug: err.message, _code: err.code });
   }
 }
 
@@ -458,10 +467,10 @@ export async function toggleLessonCompletion(req, res) {
       // ID generated in JS — no uuid-ossp extension required.
       // ON CONFLICT guard makes the insert idempotent (handles any race condition).
       const { rows: inserted } = await pool.query(
-        `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at)
-         VALUES ($1, $2, $3, $4, NOW())
+        `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at, updated_at)
+         VALUES ($1, $2::uuid, $3, $4, NOW(), NOW())
          ON CONFLICT (user_id, lesson_id)
-         DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id
+         DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id, updated_at = NOW()
          RETURNING completed_at`,
         [randomUUID(), userId, lessonId, courseId]
       );
@@ -486,10 +495,20 @@ export async function toggleLessonCompletion(req, res) {
 
     return res.json({ ok: true, completed, completedAt, progress, completedLessonIds });
   } catch (err) {
-    console.error("toggleLessonCompletion error:", err.message, err.detail ?? '');
+    console.error("═══ toggleLessonCompletion FATAL ERROR ═══");
+    console.error("  Message   :", err.message);
+    console.error("  PG Code   :", err.code);         // 42804=type mismatch, 23502=NOT NULL, 23505=UNIQUE
+    console.error("  Constraint:", err.constraint);
+    console.error("  Table     :", err.table);
+    console.error("  Column    :", err.column);
+    console.error("  Detail    :", err.detail);
+    console.error("  Params    : userId=%s lessonId=%s courseId=%s",
+      req.auth?.userId, req.params?.lessonId, req.params?.courseId);
+    console.error("  Stack     :", err.stack);
+    console.error("══════════════════════════════════════════");
     return res
       .status(500)
-      .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
+      .json({ ok: false, messageAr: "حدث خطأ في السيرفر", _debug: err.message, _code: err.code });
   }
 }
 

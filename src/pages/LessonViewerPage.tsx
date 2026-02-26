@@ -196,19 +196,7 @@ export function LessonViewerPage() {
 
     console.log(`[Progress] markLessonComplete: lesson "${cur.title}" (${cur.id}), already completed = ${cur.completed}`);
 
-    // Optimistic update
-    setLesson((prev) => prev ? { ...prev, completed: true } : prev);
-    setProgress((prev) => {
-      if (!prev || cur.completed) return prev; // already counted — skip
-      const completedLessons = Math.min(prev.totalLessons, prev.completedLessons + 1);
-      const percentage = prev.totalLessons > 0
-        ? Math.round((completedLessons / prev.totalLessons) * 100)
-        : 0;
-      console.log(`[Progress] Optimistic after video end → ${completedLessons}/${prev.totalLessons} = ${percentage}%`);
-      return { ...prev, completedLessons, percentage };
-    });
-    setCompletedLessonIds((prev) => new Set([...prev, cur.id]));
-
+    // NO optimistic update — wait for server confirmation before moving the bar.
     try {
       const { data } = await api.post(
         `/courses/${cur.courseId}/lessons/${cur.id}/complete`
@@ -222,7 +210,6 @@ export function LessonViewerPage() {
         console.log('[Progress] Server progress after video end →', data.progress);
         setProgress(data.progress);
       }
-      // Use the authoritative completed list from the server
       if (data.completedLessonIds) {
         setCompletedLessonIds(new Set<string>(data.completedLessonIds));
       } else {
@@ -232,9 +219,12 @@ export function LessonViewerPage() {
           return next;
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[Progress] markLessonComplete API error:', err);
-      // Re-fetch from server so progress/sidebar reflect true DB state
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: unknown; status?: number } };
+        console.error('[Progress] Server responded:', axiosErr.response?.status, axiosErr.response?.data);
+      }
       if (cur.courseId) {
         fetchProgress(cur.courseId);
         fetchCompletedLessons(cur.courseId);
@@ -360,25 +350,10 @@ export function LessonViewerPage() {
     setToggling(true);
 
     const wasCompleted = lesson.completed;
-    const nowCompleted = !wasCompleted;
     console.log(`[Progress] handleToggleCompletion: ${wasCompleted ? 'un-completing' : 'completing'} lesson "${lesson.title}" (${lesson.id})`);
 
-    // ── Optimistic update ─────────────────────────────────────────────
-    setLesson((prev) => prev ? { ...prev, completed: nowCompleted } : prev);
-    setProgress((prev) => {
-      if (!prev) return prev;
-      const delta = nowCompleted ? 1 : -1;
-      const completedLessons = Math.max(0, Math.min(prev.totalLessons, prev.completedLessons + delta));
-      const percentage = prev.totalLessons > 0 ? Math.round((completedLessons / prev.totalLessons) * 100) : 0;
-      console.log(`[Progress] Optimistic update → ${completedLessons}/${prev.totalLessons} = ${percentage}%`);
-      return { ...prev, completedLessons, percentage };
-    });
-    setCompletedLessonIds((prev) => {
-      const next = new Set(prev);
-      if (nowCompleted) next.add(lesson.id); else next.delete(lesson.id);
-      return next;
-    });
-
+    // NO optimistic update — state only changes after the server confirms 200 OK.
+    // This prevents the "flash to wrong %" and "rollback to 0%" glitches.
     try {
       const { data } = await api.post(
         `/courses/${lesson.courseId}/lessons/${lesson.id}/complete`
@@ -392,7 +367,6 @@ export function LessonViewerPage() {
         console.log('[Progress] Server progress →', data.progress);
         setProgress(data.progress);
       }
-      // Use the authoritative list the server returns; fall back to local toggle
       if (data.completedLessonIds) {
         setCompletedLessonIds(new Set<string>(data.completedLessonIds));
       } else {
@@ -402,11 +376,14 @@ export function LessonViewerPage() {
           return next;
         });
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[Progress] toggle API error:', err);
-      // Revert only the lesson button — re-fetch server truth for progress/sidebar
-      // (avoids the "flash 100% → revert to 0%" caused by stale optimistic state)
-      setLesson((prev) => prev ? { ...prev, completed: wasCompleted } : prev);
+      // Show the server's debug message in the console so we can read the SQL error
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { data?: unknown; status?: number } };
+        console.error('[Progress] Server responded:', axiosErr.response?.status, axiosErr.response?.data);
+      }
+      // Re-fetch server truth — button stays in its original state
       fetchProgress(lesson.courseId);
       fetchCompletedLessons(lesson.courseId);
     } finally {

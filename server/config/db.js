@@ -296,9 +296,39 @@ export async function ensureMigrations() {
       ON lesson_progress(user_id, course_id)
     `);
 
+    // lesson_progress: fix updated_at NOT NULL with no default (causes 500 on every INSERT)
+    await tryStep(client, "lesson_progress updated_at default",
+      "ALTER TABLE lesson_progress ALTER COLUMN updated_at SET DEFAULT NOW()"
+    );
+
+    // lesson_progress: watched_seconds should default to 0 (defensive)
+    await tryStep(client, "lesson_progress watched_seconds default",
+      "ALTER TABLE lesson_progress ALTER COLUMN watched_seconds SET DEFAULT 0"
+    );
+
     // ── 5. Role system migration: convert old lowercase roles to UPPERCASE ─────
     await tryStep(client, "migrate role admin→ADMIN",   `UPDATE users SET role = 'ADMIN'   WHERE role = 'admin'`);
     await tryStep(client, "migrate role user→STUDENT",  `UPDATE users SET role = 'STUDENT' WHERE role = 'user'`);
+
+    // ── Verify lesson_progress columns so we can catch schema drift early ──────
+    const { rows: lpCols } = await client.query(`
+      SELECT column_name, data_type, is_nullable, column_default
+      FROM information_schema.columns
+      WHERE table_name = 'lesson_progress'
+      ORDER BY ordinal_position
+    `);
+    console.log("[DB] lesson_progress columns:");
+    lpCols.forEach(c =>
+      console.log(`  - ${c.column_name}: ${c.data_type} | nullable=${c.is_nullable} | default=${c.column_default ?? 'none'}`)
+    );
+    const required = ['id', 'user_id', 'lesson_id', 'course_id', 'completed_at'];
+    const found = lpCols.map(c => c.column_name);
+    const missing = required.filter(col => !found.includes(col));
+    if (missing.length > 0) {
+      console.error("[DB] ❌ lesson_progress is MISSING columns:", missing);
+    } else {
+      console.log("[DB] ✅ lesson_progress schema OK — all required columns present.");
+    }
 
     console.log("[DB] ✅ All migrations applied successfully.");
   } finally {
