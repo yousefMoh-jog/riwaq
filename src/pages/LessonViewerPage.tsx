@@ -222,13 +222,23 @@ export function LessonViewerPage() {
         console.log('[Progress] Server progress after video end →', data.progress);
         setProgress(data.progress);
       }
-      setCompletedLessonIds((prev) => {
-        const next = new Set(prev);
-        if (data.completed) next.add(cur.id);
-        return next;
-      });
+      // Use the authoritative completed list from the server
+      if (data.completedLessonIds) {
+        setCompletedLessonIds(new Set<string>(data.completedLessonIds));
+      } else {
+        setCompletedLessonIds((prev) => {
+          const next = new Set(prev);
+          if (data.completed) next.add(cur.id);
+          return next;
+        });
+      }
     } catch (err) {
       console.error('[Progress] markLessonComplete API error:', err);
+      // Re-fetch from server so progress/sidebar reflect true DB state
+      if (cur.courseId) {
+        fetchProgress(cur.courseId);
+        fetchCompletedLessons(cur.courseId);
+      }
     }
   // lessonRef is a ref — stable, intentionally omitted from deps
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -382,27 +392,23 @@ export function LessonViewerPage() {
         console.log('[Progress] Server progress →', data.progress);
         setProgress(data.progress);
       }
-      setCompletedLessonIds((prev) => {
-        const next = new Set(prev);
-        if (data.completed) next.add(lesson.id); else next.delete(lesson.id);
-        return next;
-      });
+      // Use the authoritative list the server returns; fall back to local toggle
+      if (data.completedLessonIds) {
+        setCompletedLessonIds(new Set<string>(data.completedLessonIds));
+      } else {
+        setCompletedLessonIds((prev) => {
+          const next = new Set(prev);
+          if (data.completed) next.add(lesson.id); else next.delete(lesson.id);
+          return next;
+        });
+      }
     } catch (err) {
       console.error('[Progress] toggle API error:', err);
-      // Roll back optimistic update
+      // Revert only the lesson button — re-fetch server truth for progress/sidebar
+      // (avoids the "flash 100% → revert to 0%" caused by stale optimistic state)
       setLesson((prev) => prev ? { ...prev, completed: wasCompleted } : prev);
-      setProgress((prev) => {
-        if (!prev) return prev;
-        const delta = wasCompleted ? 1 : -1;
-        const completedLessons = Math.max(0, Math.min(prev.totalLessons, prev.completedLessons + delta));
-        const percentage = prev.totalLessons > 0 ? Math.round((completedLessons / prev.totalLessons) * 100) : 0;
-        return { ...prev, completedLessons, percentage };
-      });
-      setCompletedLessonIds((prev) => {
-        const next = new Set(prev);
-        if (wasCompleted) next.add(lesson.id); else next.delete(lesson.id);
-        return next;
-      });
+      fetchProgress(lesson.courseId);
+      fetchCompletedLessons(lesson.courseId);
     } finally {
       setToggling(false);
     }

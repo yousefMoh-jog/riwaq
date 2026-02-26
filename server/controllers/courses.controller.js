@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { pool } from "../config/db.js";
 import { generateSignedUrl, generateSignedEmbedUrl } from "../services/bunny.service.js";
 
@@ -307,14 +308,14 @@ export async function completeLesson(req, res) {
     }
 
     // Upsert: always marks the lesson as complete (idempotent).
-    // id is provided explicitly — covers databases where the column has no DEFAULT.
+    // ID generated in JS via randomUUID() — no uuid-ossp extension required.
     const { rows: upserted } = await pool.query(
       `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at)
-       VALUES (uuid_generate_v4(), $1, $2, $3, NOW())
+       VALUES ($1, $2, $3, $4, NOW())
        ON CONFLICT (user_id, lesson_id)
        DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id
        RETURNING completed_at`,
-      [userId, lessonId, courseId]
+      [randomUUID(), userId, lessonId, courseId]
     );
 
     // Return the updated progress so the caller can refresh the UI in one round-trip
@@ -327,7 +328,7 @@ export async function completeLesson(req, res) {
       messageAr: "تم تسجيل اكتمال الدرس",
     });
   } catch (err) {
-    console.error('[completeLesson] error:', err);
+    console.error('[completeLesson] error:', err.message, err.detail ?? '');
     return res
       .status(500)
       .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
@@ -454,25 +455,38 @@ export async function toggleLessonCompletion(req, res) {
       );
       completed = false;
     } else {
-      // Provide id explicitly — some databases were created without a DEFAULT on
-      // the id column, which causes "null value in column id violates not-null
-      // constraint".  uuid_generate_v4() works for both UUID and TEXT columns.
+      // ID generated in JS — no uuid-ossp extension required.
+      // ON CONFLICT guard makes the insert idempotent (handles any race condition).
       const { rows: inserted } = await pool.query(
         `INSERT INTO lesson_progress (id, user_id, lesson_id, course_id, completed_at)
-         VALUES (uuid_generate_v4(), $1, $2, $3, NOW())
+         VALUES ($1, $2, $3, $4, NOW())
+         ON CONFLICT (user_id, lesson_id)
+         DO UPDATE SET completed_at = NOW(), course_id = EXCLUDED.course_id
          RETURNING completed_at`,
-        [userId, lessonId, courseId]
+        [randomUUID(), userId, lessonId, courseId]
       );
       completed = true;
       completedAt = inserted[0].completed_at;
     }
 
-    // 4. Return updated progress in the same response — saves the client a second round-trip
+    // 4. Return updated progress + full completed-lesson list in one response
+    //    so the client never has to fire a second round-trip.
     console.log(`[Progress] toggleLessonCompletion: lesson=${lessonId} course=${courseId} user=${userId} → completed=${completed}`);
     const progress = await calculateCourseProgress(userId, courseId);
-    return res.json({ ok: true, completed, completedAt, progress });
+
+    const { rows: completedRows } = await pool.query(
+      `SELECT lp.lesson_id
+       FROM lesson_progress lp
+       JOIN lessons  l ON l.id = lp.lesson_id
+       JOIN sections s ON s.id = l.section_id
+       WHERE lp.user_id = $1 AND s.course_id = $2`,
+      [userId, courseId]
+    );
+    const completedLessonIds = completedRows.map((r) => r.lesson_id);
+
+    return res.json({ ok: true, completed, completedAt, progress, completedLessonIds });
   } catch (err) {
-    console.error("toggleLessonCompletion error:", err);
+    console.error("toggleLessonCompletion error:", err.message, err.detail ?? '');
     return res
       .status(500)
       .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
