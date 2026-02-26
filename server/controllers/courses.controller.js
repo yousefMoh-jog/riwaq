@@ -326,7 +326,8 @@ export async function completeLesson(req, res) {
       progress,
       messageAr: "تم تسجيل اكتمال الدرس",
     });
-  } catch {
+  } catch (err) {
+    console.error('[completeLesson] error:', err);
     return res
       .status(500)
       .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });

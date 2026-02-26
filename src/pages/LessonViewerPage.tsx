@@ -5,8 +5,9 @@ import { api } from '../lib/api';
 import Hls from 'hls.js';
 import {
   CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronDown,
-  ArrowRight, BookOpen, PlayCircle, Circle, Menu, X, SkipForward,
+  ArrowRight, BookOpen, PlayCircle, Circle, Menu, X, SkipForward, Award,
 } from 'lucide-react';
+import { downloadCertificate } from '../lib/certificate';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -73,7 +74,7 @@ function addEnableApi(url: string): string {
 export function LessonViewerPage() {
   const { id: lessonId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   // Current lesson + playback
   const [lesson, setLesson] = useState<Lesson | null>(null);
@@ -588,6 +589,28 @@ export function LessonViewerPage() {
                 <p className="text-xs text-slate-500">
                   {progress.completedLessons} من {progress.totalLessons} درس مكتمل
                 </p>
+              </div>
+            )}
+
+            {/* Certificate Button — shown only when course is 100% complete */}
+            {progress?.percentage === 100 && (
+              <div className="bg-gradient-to-r from-yellow-900/20 to-amber-900/20 rounded-xl border border-yellow-600/30 p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-yellow-400 font-semibold">🎉 أتممت الدورة بالكامل!</p>
+                  <p className="text-slate-400 text-xs mt-0.5">يمكنك الآن تحميل شهادة الإتمام الخاصة بك</p>
+                </div>
+                <button
+                  onClick={() =>
+                    downloadCertificate({
+                      studentName: user?.fullName ?? 'الطالب',
+                      courseTitle: courseInfo?.title ?? 'الدورة',
+                    })
+                  }
+                  className="flex items-center gap-2 px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-white text-sm font-bold rounded-xl transition-colors flex-shrink-0"
+                >
+                  <Award size={16} />
+                  احصل على شهادتك
+                </button>
               </div>
             )}
 
