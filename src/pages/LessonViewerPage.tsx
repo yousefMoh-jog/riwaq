@@ -5,7 +5,7 @@ import { api } from '../lib/api';
 import Hls from 'hls.js';
 import {
   CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronDown,
-  ArrowRight, BookOpen, PlayCircle, Circle, Menu, X, SkipForward, Award,
+  ArrowRight, BookOpen, PlayCircle, Circle, Menu, X, SkipForward, Award, Download,
 } from 'lucide-react';
 import { downloadCertificate } from '../lib/certificate';
 
@@ -20,6 +20,7 @@ interface Lesson {
   courseId: string;
   completed: boolean;
   completedAt?: string;
+  attachmentUrl?: string | null;
 }
 
 interface SidebarLesson {
@@ -555,6 +556,24 @@ export function LessonViewerPage() {
                 <span>{lesson.completed ? 'مكتمل ✓' : 'علّم كمكتمل'}</span>
               </button>
             </div>
+
+            {/* Download Resources — shown only when the lesson has an attachment */}
+            {lesson.attachmentUrl && (
+              <a
+                href={
+                  lesson.attachmentUrl.startsWith('http')
+                    ? lesson.attachmentUrl
+                    : `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8001').trim()}${lesson.attachmentUrl}`
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                download
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-blue-600/20 text-blue-400 border border-blue-600/40 hover:bg-blue-600/30 transition-colors w-fit"
+              >
+                <Download size={16} />
+                تحميل المرفقات
+              </a>
+            )}
 
             {/* Progress Bar */}
             {progress && (

@@ -306,6 +306,25 @@ export async function ensureMigrations() {
       "ALTER TABLE lesson_progress ALTER COLUMN watched_seconds SET DEFAULT 0"
     );
 
+    // ── Favorites ─────────────────────────────────────────────────────────────
+    await tryStep(client, "create favorites table", `
+      CREATE TABLE IF NOT EXISTS favorites (
+        id         TEXT PRIMARY KEY DEFAULT (uuid_generate_v4())::text,
+        user_id    TEXT NOT NULL,
+        course_id  TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        UNIQUE(user_id, course_id)
+      )
+    `);
+    await tryStep(client, "favorites idx user_id", `
+      CREATE INDEX IF NOT EXISTS idx_favorites_user_id ON favorites(user_id)
+    `);
+
+    // ── Lesson attachment_url ──────────────────────────────────────────────────
+    await tryStep(client, "lessons.attachment_url col",
+      "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS attachment_url TEXT"
+    );
+
     // ── 5. Role system migration: convert old lowercase roles to UPPERCASE ─────
     await tryStep(client, "migrate role admin→ADMIN",   `UPDATE users SET role = 'ADMIN'   WHERE role = 'admin'`);
     await tryStep(client, "migrate role user→STUDENT",  `UPDATE users SET role = 'STUDENT' WHERE role = 'user'`);

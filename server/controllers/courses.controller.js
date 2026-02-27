@@ -271,6 +271,7 @@ export async function getLesson(req, res) {
       courseId,
       completed: completionRows.length > 0,
       completedAt: completionRows[0]?.completed_at,
+      attachmentUrl: lesson.attachment_url ?? null,
     });
   } catch {
     return res.status(500).json({ messageAr: "حدث خطأ في السيرفر" });
@@ -701,6 +702,68 @@ export async function streamLesson(req, res) {
     return res.json({ streamUrl: streamUrl ?? null, embedUrl: embedUrl ?? null });
   } catch (err) {
     console.error("streamLesson error:", err);
+    return res.status(500).json({ messageAr: "حدث خطأ في السيرفر" });
+  }
+}
+
+export async function toggleFavorite(req, res) {
+  try {
+    const { courseId } = req.params;
+    const userId = req.auth.userId;
+
+    // Verify course exists
+    const { rows: courseRows } = await pool.query(
+      "SELECT id FROM courses WHERE id = $1",
+      [courseId]
+    );
+    if (courseRows.length === 0) {
+      return res.status(404).json({ ok: false, messageAr: "الدورة غير موجودة" });
+    }
+
+    // Check if already favorited
+    const { rows: existing } = await pool.query(
+      "SELECT id FROM favorites WHERE user_id = $1 AND course_id = $2",
+      [userId, courseId]
+    );
+
+    if (existing.length > 0) {
+      await pool.query(
+        "DELETE FROM favorites WHERE user_id = $1 AND course_id = $2",
+        [userId, courseId]
+      );
+      return res.json({ ok: true, favorited: false });
+    } else {
+      await pool.query(
+        `INSERT INTO favorites (id, user_id, course_id, created_at)
+         VALUES ((uuid_generate_v4())::text, $1, $2, NOW())`,
+        [userId, courseId]
+      );
+      return res.json({ ok: true, favorited: true });
+    }
+  } catch (err) {
+    console.error("toggleFavorite error:", err);
+    return res.status(500).json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
+  }
+}
+
+export async function getFavorites(req, res) {
+  try {
+    const userId = req.auth.userId;
+    const { rows } = await pool.query(
+      `SELECT c.id, c.title_ar AS title, c.description_ar AS description,
+              c.thumbnail_url, c.price, c.educational_level,
+              cat.name_ar AS category_name, f.created_at AS favorited_at
+       FROM favorites f
+       JOIN courses c ON c.id = f.course_id
+       LEFT JOIN categories cat ON cat.id = c.category_id
+       WHERE f.user_id = $1
+         AND c.published = true
+       ORDER BY f.created_at DESC`,
+      [userId]
+    );
+    return res.json({ favorites: rows });
+  } catch (err) {
+    console.error("getFavorites error:", err);
     return res.status(500).json({ messageAr: "حدث خطأ في السيرفر" });
   }
 }

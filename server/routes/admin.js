@@ -23,6 +23,8 @@ import {
   registerVideo,
   uploadVideoToLesson,
   videoUploadMiddleware,
+  uploadAttachment,
+  attachmentUploadMiddleware,
   getOrders,
   updateOrder,
   updateUserRole,
@@ -59,5 +61,6 @@ router.post("/admin/lessons/:id/upload-video", requireInstructor, videoUploadMid
 router.get("/admin/lessons/:id/upload-signature", requireInstructor, getVideoUploadSignature);
 router.post("/admin/lessons/:id/init-upload", requireInstructor, initUpload);
 router.post("/admin/lessons/:id/register-video", requireInstructor, registerVideo);
+router.post("/admin/lessons/:id/upload-attachment", requireInstructor, attachmentUploadMiddleware, uploadAttachment);
 
 export default router;

@@ -23,6 +23,8 @@ import {
   getPublicCategories,
   getRatings,
   submitRating,
+  toggleFavorite,
+  getFavorites,
 } from "../controllers/courses.controller.js";
 
 const router = Router();
@@ -46,5 +48,9 @@ router.get("/courses/:courseId/completed-lessons", authMiddleware, getCompletedL
 router.get("/courses/:courseId/ratings", getRatings);
 router.post("/courses/:courseId/ratings", authMiddleware, submitRating);
 router.get("/lessons/:id/stream", authMiddleware, streamLesson);
+
+// Favorites
+router.get("/favorites", authMiddleware, getFavorites);
+router.post("/courses/:courseId/favorite", authMiddleware, toggleFavorite);
 
 export default router;

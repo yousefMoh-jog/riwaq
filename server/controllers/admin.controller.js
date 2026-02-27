@@ -46,6 +46,43 @@ const videoMulter = multer({
 });
 export const videoUploadMiddleware = videoMulter.single("video");
 
+const ATTACHMENTS_DIR = join(__dirname, "..", "..", "uploads", "attachments");
+if (!existsSync(ATTACHMENTS_DIR)) mkdirSync(ATTACHMENTS_DIR, { recursive: true });
+
+const attachmentStorage = multer.diskStorage({
+  destination: ATTACHMENTS_DIR,
+  filename: (_req, file, cb) => {
+    const ext = extname(file.originalname);
+    cb(null, `attachment-${Date.now()}${ext}`);
+  },
+});
+export const attachmentUploadMiddleware = multer({
+  storage: attachmentStorage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20 MB
+}).single("attachment");
+
+export async function uploadAttachment(req, res) {
+  if (!req.file) {
+    return res.status(400).json({ ok: false, messageAr: "لم يتم رفع أي ملف" });
+  }
+  const lessonId = req.params.id;
+  const url = `/uploads/attachments/${req.file.filename}`;
+
+  try {
+    const { rows } = await pool.query(
+      "UPDATE lessons SET attachment_url = $1 WHERE id = $2 RETURNING id",
+      [url, lessonId]
+    );
+    if (rows.length === 0) {
+      return res.status(404).json({ ok: false, messageAr: "الدرس غير موجود" });
+    }
+    return res.json({ ok: true, url });
+  } catch (err) {
+    console.error("uploadAttachment error:", err);
+    return res.status(500).json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
+  }
+}
+
 export async function getUsers(req, res) {
   try {
     const { rows } = await pool.query(
@@ -430,6 +467,7 @@ export async function getLessons(req, res) {
     let query, params;
     if (role === "INSTRUCTOR") {
       query = `SELECT l.id, l.title_ar AS title, l.section_id, l.sort_order, l.duration_seconds AS duration,
+                      l.attachment_url,
                       s.title_ar AS section_title, s.course_id, c.title_ar AS course_title,
                       va.status AS video_status, va.bunny_video_id
                FROM lessons l
@@ -441,6 +479,7 @@ export async function getLessons(req, res) {
       params = [userId];
     } else {
       query = `SELECT l.id, l.title_ar AS title, l.section_id, l.sort_order, l.duration_seconds AS duration,
+                      l.attachment_url,
                       s.title_ar AS section_title, s.course_id, c.title_ar AS course_title,
                       va.status AS video_status, va.bunny_video_id
                FROM lessons l
@@ -510,12 +549,28 @@ export async function updateLesson(req, res) {
       });
     }
 
+    // Build SET clause dynamically so attachment_url is only touched when sent
+    const setClauses = [
+      "title_ar = $1",
+      "section_id = $2",
+      "duration_seconds = $3",
+      "sort_order = $4",
+    ];
+    const params = [title, sectionId, duration, orderIndex];
+
+    const rawAttachmentUrl = req.body?.attachmentUrl;
+    if (rawAttachmentUrl !== undefined) {
+      // empty string → NULL (clears the attachment)
+      params.push(rawAttachmentUrl === '' ? null : rawAttachmentUrl);
+      setClauses.push(`attachment_url = $${params.length}`);
+    }
+
+    params.push(lessonId);
+    const whereIdx = params.length;
+
     const { rows } = await pool.query(
-      `UPDATE lessons
-       SET title_ar = $1, section_id = $2, duration_seconds = $3, sort_order = $4
-       WHERE id = $5
-       RETURNING *`,
-      [title, sectionId, duration, orderIndex, lessonId]
+      `UPDATE lessons SET ${setClauses.join(', ')} WHERE id = $${whereIdx} RETURNING *`,
+      params
     );
 
     if (rows.length === 0) {

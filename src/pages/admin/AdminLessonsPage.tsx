@@ -5,7 +5,7 @@ import { api } from '../../lib/api';
 import { AdminLayout } from '../../layouts/AdminLayout';
 import {
   Plus, Edit, Trash2, X, Upload, CheckCircle, Clock,
-  VideoOff, Filter, ChevronDown, Loader2, RotateCcw, Video,
+  VideoOff, Filter, ChevronDown, Loader2, RotateCcw, Video, Paperclip,
 } from 'lucide-react';
 
 // ── Interfaces ────────────────────────────────────────────────────────────────
@@ -21,6 +21,7 @@ interface Lesson {
   sort_order: number;
   video_status: 'pending' | 'ready' | null;
   bunny_video_id: string | null;
+  attachment_url?: string | null;
 }
 
 interface Section {
@@ -50,6 +51,7 @@ interface LessonFormData {
   sectionId: string;
   duration: string;
   orderIndex: string;
+  attachmentUrl: string;
 }
 
 interface FormErrors {
@@ -59,7 +61,7 @@ interface FormErrors {
   orderIndex?: string;
 }
 
-const EMPTY_FORM: LessonFormData = { courseId: '', title: '', sectionId: '', duration: '', orderIndex: '' };
+const EMPTY_FORM: LessonFormData = { courseId: '', title: '', sectionId: '', duration: '', orderIndex: '', attachmentUrl: '' };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -152,6 +154,11 @@ export function AdminLessonsPage() {
   // Per-row upload progress (for both modal-triggered and manual uploads)
   const [uploadStates, setUploadStates] = useState<Record<string, UploadState>>({});
   const rowFileRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  // Attachment upload state (edit modal)
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
+  const [attachmentError, setAttachmentError]         = useState<string | null>(null);
+  const attachmentFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { Promise.all([fetchLessons(), fetchSections(), fetchCourses()]); }, []);
   useEffect(() => { setFilterSectionId(''); }, [filterCourseId]);
@@ -279,6 +286,28 @@ export function AdminLessonsPage() {
     }
   };
 
+  // Attachment file upload (edit modal only — needs an existing lessonId)
+  const handleAttachmentUpload = async (lessonId: string, file: File | null) => {
+    if (!file) return;
+    setAttachmentUploading(true);
+    setAttachmentError(null);
+    try {
+      const form = new FormData();
+      form.append('attachment', file);
+      const { data } = await api.post(`/admin/lessons/${lessonId}/upload-attachment`, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setFormData((prev) => ({ ...prev, attachmentUrl: data.url }));
+    } catch (err: unknown) {
+      // api interceptor wraps errors into plain Error — read err.message directly
+      const msg = (err instanceof Error ? err.message : null) ?? 'فشل رفع الملف';
+      setAttachmentError(msg);
+    } finally {
+      setAttachmentUploading(false);
+      if (attachmentFileRef.current) attachmentFileRef.current.value = '';
+    }
+  };
+
   // Per-row manual upload (existing lessons without video)
   const handleRowUploadClick = (lessonId: string) => rowFileRefs.current[lessonId]?.click();
 
@@ -301,6 +330,8 @@ export function AdminLessonsPage() {
         sectionId: formData.sectionId,
         duration: parseInt(formData.duration) || 0,
         orderIndex: parseInt(formData.orderIndex) || suggestedOrder,
+        // Only include attachmentUrl when editing (it has a lesson ID to attach to)
+        ...(editingLesson ? { attachmentUrl: formData.attachmentUrl.trim() } : {}),
       };
 
       if (editingLesson) {
@@ -358,9 +389,11 @@ export function AdminLessonsPage() {
       sectionId: lesson.section_id,
       duration: lesson.duration ? String(lesson.duration) : '',
       orderIndex: String(lesson.sort_order),
+      attachmentUrl: lesson.attachment_url ?? '',
     });
     setFormErrors({});
     setServerError(null);
+    setAttachmentError(null);
     setShowModal(true);
   };
 
@@ -377,7 +410,9 @@ export function AdminLessonsPage() {
     setServerError(null);
     setSubmitting(false);
     setModalVideoFile(null);
+    setAttachmentError(null);
     if (modalFileRef.current) modalFileRef.current.value = '';
+    if (attachmentFileRef.current) attachmentFileRef.current.value = '';
   };
 
   const handleOpenCreate = () => {
@@ -717,6 +752,73 @@ export function AdminLessonsPage() {
                     className="hidden"
                     onChange={(e) => setModalVideoFile(e.target.files?.[0] ?? null)}
                   />
+                </div>
+              )}
+
+              {/* ── Attachment (edit mode only — needs an existing lesson ID for file upload) ── */}
+              {editingLesson && (
+                <div>
+                  <label className="block text-sm font-medium mb-1.5">
+                    مرفق الدرس
+                    <span className="text-xs text-muted-foreground mr-2 font-normal">PDF، ملف، أو رابط خارجي</span>
+                  </label>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={formData.attachmentUrl}
+                      onChange={(e) => setFormData({ ...formData, attachmentUrl: e.target.value })}
+                      placeholder="https://... أو اتركه فارغاً لإزالة المرفق"
+                      className="flex-1 px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => attachmentFileRef.current?.click()}
+                      disabled={attachmentUploading}
+                      className="flex items-center gap-1.5 px-3 py-2.5 border border-border rounded-lg text-sm hover:bg-muted transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      {attachmentUploading
+                        ? <Loader2 size={15} className="animate-spin" />
+                        : <Paperclip size={15} />}
+                      رفع ملف
+                    </button>
+                    {formData.attachmentUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, attachmentUrl: '' })}
+                        title="إزالة المرفق"
+                        className="p-2.5 border border-border rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-muted-foreground"
+                      >
+                        <X size={15} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={attachmentFileRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.zip,.rar"
+                    className="hidden"
+                    onChange={(e) => handleAttachmentUpload(editingLesson.id, e.target.files?.[0] ?? null)}
+                  />
+
+                  {attachmentError && (
+                    <p className="text-red-500 text-xs mt-1">{attachmentError}</p>
+                  )}
+                  {attachmentUploading && (
+                    <p className="text-blue-600 text-xs mt-1">جاري رفع الملف...</p>
+                  )}
+                  {formData.attachmentUrl && !attachmentUploading && (
+                    <a
+                      href={formData.attachmentUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline mt-1 block truncate"
+                    >
+                      {formData.attachmentUrl}
+                    </a>
+                  )}
                 </div>
               )}
 

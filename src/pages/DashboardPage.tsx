@@ -4,7 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { educationalLevelLabel } from '../lib/utils';
 import { RiwaqHeader } from '../app/components/RiwaqHeader';
 import { RiwaqFooter } from '../app/components/RiwaqFooter';
-import { BookOpen, GraduationCap, Lightbulb, Award } from 'lucide-react';
+import { CourseCard } from '../app/components/CourseCard';
+import { BookOpen, GraduationCap, Lightbulb, Award, Heart } from 'lucide-react';
 import { api } from '../lib/api';
 
 interface EnrolledCourse {
@@ -17,13 +18,26 @@ interface EnrolledCourse {
   };
 }
 
+interface FavoriteCourse {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string | null;
+  price: string;
+  educational_level: string;
+  category_name: string | null;
+}
+
 export function DashboardPage() {
   const { user } = useAuth();
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [loadingCourses, setLoadingCourses]   = useState(true);
+  const [favorites, setFavorites]             = useState<FavoriteCourse[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
 
   useEffect(() => {
     fetchEnrolledCourses();
+    fetchFavorites();
   }, []);
 
   const fetchEnrolledCourses = async () => {
@@ -52,6 +66,17 @@ export function DashboardPage() {
       console.error('Failed to fetch enrolled courses:', err);
     } finally {
       setLoadingCourses(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    try {
+      const { data } = await api.get('/favorites');
+      setFavorites(data.favorites || []);
+    } catch {
+      // Non-critical — section simply stays hidden
+    } finally {
+      setLoadingFavorites(false);
     }
   };
 
@@ -201,8 +226,34 @@ export function DashboardPage() {
             </div>
           )}
 
+          {/* Favorite Courses */}
+          {!loadingFavorites && favorites.length > 0 && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Heart className="w-6 h-6 text-red-500" fill="currentColor" />
+                <h2 className="text-2xl">الكورسات المفضلة</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favorites.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    id={course.id}
+                    title={course.title}
+                    description={course.description}
+                    price={course.price}
+                    thumbnail_url={course.thumbnail_url}
+                    educational_level={course.educational_level}
+                    category_name={course.category_name ?? undefined}
+                    showFavorite={true}
+                    isFavorited={true}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <Link
               to="/courses"
               className="bg-white rounded-lg shadow-sm border border-border p-6 hover:shadow-lg transition-shadow"
@@ -214,6 +265,21 @@ export function DashboardPage() {
                 <div>
                   <h3 className="text-lg mb-1">الدورات المتاحة</h3>
                   <p className="text-sm text-muted-foreground">استكشف جميع الدورات</p>
+                </div>
+              </div>
+            </Link>
+
+            <Link
+              to="/favorites"
+              className="bg-white rounded-lg shadow-sm border border-border p-6 hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center gap-4">
+                <div className="bg-red-100 rounded-full p-3">
+                  <Heart className="w-6 h-6 text-red-500" fill="currentColor" />
+                </div>
+                <div>
+                  <h3 className="text-lg mb-1">المفضلة</h3>
+                  <p className="text-sm text-muted-foreground">دوراتي المحفوظة</p>
                 </div>
               </div>
             </Link>

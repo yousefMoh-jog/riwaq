@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
 import { RiwaqHomePage } from './pages/RiwaqHomePage';
@@ -22,6 +23,7 @@ import { CourseViewerPage } from '../pages/CourseViewerPage';
 import { LessonViewerPage } from '../pages/LessonViewerPage';
 import { CheckoutPage } from '../pages/CheckoutPage';
 import { PaymentSuccessPage } from '../pages/PaymentSuccessPage';
+import { FavoritesPage } from '../pages/FavoritesPage';
 
 export default function App() {
   const { isLoading } = useAuth();
@@ -40,6 +42,9 @@ export default function App() {
 
   return (
     <>
+      {/* Global toast notifications — position bottom-left for RTL layouts */}
+      <Toaster position="bottom-left" richColors dir="rtl" />
+
       <AnimatePresence>
         {showSplash && <SplashScreen />}
       </AnimatePresence>
@@ -90,6 +95,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/favorites"
+              element={
+                <ProtectedRoute>
+                  <FavoritesPage />
                 </ProtectedRoute>
               }
             />

@@ -1,11 +1,10 @@
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { RiwaqHeader } from '../components/RiwaqHeader';
 import { RiwaqFooter } from '../components/RiwaqFooter';
-import { Play, BookOpen, Search } from 'lucide-react';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
-import { useState, useEffect } from 'react';
+import { Search } from 'lucide-react';
+import { CourseCard } from '../components/CourseCard';
+import { useAuth } from '../../context/AuthContext';
 import { api } from '../../lib/api';
-import { educationalLevelLabel } from '../../lib/utils';
 
 interface Course {
   id: string;
@@ -18,21 +17,24 @@ interface Course {
 }
 
 export function RiwaqCoursesPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('all');
+  const { isAuthenticated } = useAuth();
+
+  const [searchTerm, setSearchTerm]           = useState('');
+  const [selectedLevel, setSelectedLevel]     = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [courses, setCourses]                 = useState<Course[]>([]);
+  const [favoritedIds, setFavoritedIds]       = useState<Set<string>>(new Set());
+  const [loading, setLoading]                 = useState(true);
+  const [error, setError]                     = useState<string | null>(null);
 
   const levels = [
-    { id: 'all', label: 'جميع المستويات' },
-    { id: 'preparatory', label: 'إعدادي' },
-    { id: 'secondary', label: 'ثانوي' },
-    { id: 'university', label: 'جامعي' },
+    { id: 'all',          label: 'جميع المستويات' },
+    { id: 'preparatory',  label: 'إعدادي' },
+    { id: 'secondary',    label: 'ثانوي' },
+    { id: 'university',   label: 'جامعي' },
   ];
 
-  // Derive unique categories from loaded courses (no extra API call needed)
+  // Derive unique categories from loaded courses
   const categories = [
     { id: 'all', label: 'جميع الفئات' },
     ...Array.from(
@@ -48,15 +50,30 @@ export function RiwaqCoursesPage() {
     fetchCourses();
   }, []);
 
+  // Fetch favorite IDs once the user is authenticated so we can pre-fill hearts
+  useEffect(() => {
+    if (!isAuthenticated) { setFavoritedIds(new Set()); return; }
+    fetchFavoriteIds();
+  }, [isAuthenticated]);
+
   const fetchCourses = async () => {
     try {
       const { data } = await api.get('/courses');
       setCourses(data.courses || []);
-    } catch (err) {
-      console.error('Failed to fetch courses:', err);
+    } catch {
       setError('فشل تحميل الدورات');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFavoriteIds = async () => {
+    try {
+      const { data } = await api.get('/favorites');
+      const ids = (data.favorites as { id: string }[]).map((f) => f.id);
+      setFavoritedIds(new Set(ids));
+    } catch {
+      // Non-critical — hearts simply start un-filled
     }
   };
 
@@ -94,11 +111,10 @@ export function RiwaqCoursesPage() {
           </div>
         </section>
 
-        {/* Filters Section */}
+        {/* Filters */}
         <section className="bg-background border-b border-border py-5 sticky top-0 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
-
-            {/* Row 1: Search + clear */}
+            {/* Row 1: Search */}
             <div className="flex gap-3 items-center">
               <div className="relative flex-1">
                 <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
@@ -134,9 +150,10 @@ export function RiwaqCoursesPage() {
                 <button
                   key={level.id}
                   onClick={() => setSelectedLevel(level.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${selectedLevel === level.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                    selectedLevel === level.id
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   }`}
                 >
                   {level.label}
@@ -144,16 +161,17 @@ export function RiwaqCoursesPage() {
               ))}
             </div>
 
-            {/* Row 3: Category filter (only shown when categories are available) */}
+            {/* Row 3: Category filter */}
             {categories.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-0.5">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors border ${selectedCategory === cat.id
-                      ? 'bg-secondary text-secondary-foreground border-secondary'
-                      : 'bg-transparent text-muted-foreground border-border hover:bg-muted/50'
+                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors border ${
+                      selectedCategory === cat.id
+                        ? 'bg-secondary text-secondary-foreground border-secondary'
+                        : 'bg-transparent text-muted-foreground border-border hover:bg-muted/50'
                     }`}
                   >
                     {cat.label}
@@ -169,7 +187,7 @@ export function RiwaqCoursesPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {loading ? (
               <div className="text-center py-16">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
                 <p className="mt-4 text-muted-foreground">جاري تحميل الدورات...</p>
               </div>
             ) : error ? (
@@ -197,50 +215,18 @@ export function RiwaqCoursesPage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredCourses.map((course) => (
-                      <div
+                      <CourseCard
                         key={course.id}
-                        className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
-                      >
-                        <div className="relative overflow-hidden aspect-video">
-                          <ImageWithFallback
-                            src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=500&h=300&fit=crop'}
-                            alt={course.title}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-                              <Play size={28} className="text-accent-foreground mr-1" />
-                            </div>
-                          </div>
-                        </div>
-                        <div className="p-6">
-                          <div className="flex items-start gap-2 mb-2">
-                            <div className="flex-1">
-                              <h3 className="text-xl mb-1">{course.title}</h3>
-                              {course.category_name && (
-                                <p className="text-xs text-primary mb-2">
-                                  {course.category_name ?? 'غير مصنف'}
-                                </p>
-                              )}
-                            </div>
-                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full whitespace-nowrap">
-                              {educationalLevelLabel(course.educational_level)}
-                            </span>
-                          </div>
-                          <p className="text-muted-foreground mb-4 line-clamp-2">
-                            {course.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <span className="text-2xl text-primary">{course.price} د.ل</span>
-                            <Link
-                              to={`/course/${course.id}`}
-                              className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-                            >
-                              عرض التفاصيل
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
+                        id={course.id}
+                        title={course.title}
+                        description={course.description}
+                        price={course.price}
+                        thumbnail_url={course.thumbnail_url}
+                        educational_level={course.educational_level}
+                        category_name={course.category_name}
+                        showFavorite={isAuthenticated}
+                        isFavorited={favoritedIds.has(course.id)}
+                      />
                     ))}
                   </div>
                 )}
