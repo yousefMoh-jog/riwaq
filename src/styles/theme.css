@@ -45,40 +45,50 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
+  /* Riwaq dark palette — deep navy canvas, brand purple preserved */
+  --background: #0f172a;
+  --foreground: #e2e8f0;
+  --card: #1e293b;
+  --card-foreground: #e2e8f0;
+  --popover: #1e293b;
+  --popover-foreground: #e2e8f0;
+
+  /* Keep the Riwaq purple brand — lightened for dark-bg legibility */
+  --primary: #8478C9;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #e2e8f0;
+
+  /* Gold accent stays — pops beautifully on dark */
+  --accent: #F3BD32;
+  --accent-foreground: #1a1a1a;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: transparent;
+  --input-background: #1e293b;
+  --switch-background: #334155;
+  --ring: #8478C9;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
+
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+
+  --sidebar: #0f172a;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #8478C9;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: #8478C9;
 }
 
 @theme inline {
@@ -127,8 +137,14 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Smooth theme transitions */
+  html {
+    transition: background-color 0.3s ease;
+  }
+
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.25s ease;
   }
 
   /**
@@ -180,5 +196,14 @@
     font-size: var(--text-base);
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
+  }
+}
+
+/* Utility: apply to structural panels so bg/border/text transitions are smooth */
+@layer utilities {
+  .theme-transition {
+    transition-property: background-color, border-color, color, box-shadow;
+    transition-duration: 0.25s;
+    transition-timing-function: ease;
   }
 }

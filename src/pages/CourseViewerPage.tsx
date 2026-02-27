@@ -166,12 +166,12 @@ export function CourseViewerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-muted/30">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 theme-transition">
         <RiwaqHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-muted-foreground">جاري التحميل...</p>
+            <div className="w-10 h-10 border-4 border-[#3B2F82] dark:border-[#8478C9] border-t-transparent rounded-full animate-spin" />
+            <p className="text-gray-500 dark:text-slate-400">جاري التحميل...</p>
           </div>
         </main>
       </div>
@@ -180,15 +180,15 @@ export function CourseViewerPage() {
 
   if (!course || !course.isEnrolled) {
     return (
-      <div className="min-h-screen flex flex-col bg-muted/30">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 theme-transition">
         <RiwaqHeader />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center space-y-3">
-            <Lock className="w-16 h-16 text-muted-foreground mx-auto" />
-            <p className="text-muted-foreground">يجب التسجيل في الدورة أولاً</p>
+            <Lock className="w-16 h-16 text-gray-400 dark:text-slate-500 mx-auto" />
+            <p className="text-gray-500 dark:text-slate-400">يجب التسجيل في الدورة أولاً</p>
             <Link
               to={`/course/${courseId}`}
-              className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+              className="inline-block bg-[#3B2F82] dark:bg-[#8478C9] text-white px-6 py-3 rounded-lg hover:opacity-90 transition-opacity"
             >
               عرض تفاصيل الدورة
             </Link>
@@ -201,12 +201,12 @@ export function CourseViewerPage() {
   // ── Main render ───────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-slate-900 theme-transition">
       <RiwaqHeader />
 
       <main className="flex-1">
         {/* Course Banner */}
-        <div className="bg-gradient-to-r from-slate-900 to-primary/80 text-white py-10">
+        <div className="bg-gradient-to-r from-slate-900 to-[#3B2F82]/80 text-white py-10">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <Link
               to="/courses"
@@ -287,18 +287,18 @@ export function CourseViewerPage() {
             const sectionTotal = section.lessons.length;
 
             return (
-              <div key={section.id} className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+              <div key={section.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden theme-transition">
                 {/* Section header */}
                 <button
                   onClick={() => toggleSection(section.id)}
-                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-muted/20 transition-colors text-start"
+                  className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors text-start"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-[#3B2F82]/10 dark:bg-[#8478C9]/20 text-[#3B2F82] dark:text-[#8478C9] font-bold text-sm flex items-center justify-center flex-shrink-0">
                     {sIdx + 1}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-foreground truncate">{section.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">{section.title}</p>
+                    <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                       {sectionCompleted}/{sectionTotal} درس مكتمل
                     </p>
                   </div>
@@ -306,7 +306,7 @@ export function CourseViewerPage() {
                     {sectionCompleted === sectionTotal && sectionTotal > 0 && (
                       <CheckCircle size={16} className="text-green-500" />
                     )}
-                    <span className="text-muted-foreground">
+                    <span className="text-gray-400 dark:text-slate-500">
                       {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </span>
                   </div>
@@ -314,9 +314,9 @@ export function CourseViewerPage() {
 
                 {/* Lessons */}
                 {isOpen && (
-                  <div className="border-t border-border divide-y divide-border/60">
+                  <div className="border-t border-gray-200 dark:border-slate-700 divide-y divide-gray-100 dark:divide-slate-700/60">
                     {section.lessons.length === 0 ? (
-                      <div className="flex items-center gap-3 px-5 py-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 px-5 py-4 text-sm text-gray-400 dark:text-slate-500">
                         <BookOpen size={16} />
                         لا توجد دروس في هذا القسم بعد
                       </div>
@@ -325,33 +325,33 @@ export function CourseViewerPage() {
                         <Link
                           key={lesson.id}
                           to={`/lesson-viewer/${lesson.id}`}
-                          className="flex items-center gap-3 px-5 py-3.5 hover:bg-muted/30 transition-colors group"
+                          className="flex items-center gap-3 px-5 py-3.5 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors group"
                         >
                           {/* Status icon */}
                           <div className="flex-shrink-0">
                             {lesson.completed ? (
                               <CheckCircle size={18} className="text-green-500" />
                             ) : (
-                              <Circle size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                              <Circle size={18} className="text-gray-400 dark:text-slate-500 group-hover:text-[#3B2F82] dark:group-hover:text-[#8478C9] transition-colors" />
                             )}
                           </div>
 
                           {/* Lesson title */}
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm truncate ${lesson.completed ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                            <p className={`text-sm truncate ${lesson.completed ? 'text-gray-400 dark:text-slate-500 line-through' : 'text-gray-800 dark:text-white'}`}>
                               {lIdx + 1}. {lesson.title}
                             </p>
                           </div>
 
                           {/* Duration */}
                           {lesson.duration > 0 && (
-                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                            <span className="text-xs text-gray-400 dark:text-slate-500 flex-shrink-0">
                               {formatDuration(lesson.duration)}
                             </span>
                           )}
 
                           {/* Play icon on hover */}
-                          <Play size={15} className="text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                          <Play size={15} className="text-[#3B2F82] dark:text-[#8478C9] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                         </Link>
                       ))
                     )}
@@ -362,9 +362,9 @@ export function CourseViewerPage() {
           })}
 
           {course.sections.length === 0 && (
-            <div className="bg-white rounded-xl border border-border py-20 text-center">
-              <BookOpen size={48} className="text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">لم تُضف دروس لهذه الدورة بعد</p>
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 py-20 text-center theme-transition">
+              <BookOpen size={48} className="text-gray-300 dark:text-slate-600 mx-auto mb-4" />
+              <p className="text-gray-400 dark:text-slate-500">لم تُضف دروس لهذه الدورة بعد</p>
             </div>
           )}
         </div>

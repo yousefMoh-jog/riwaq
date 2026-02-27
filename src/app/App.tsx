@@ -18,6 +18,8 @@ import { AdminSectionsPage } from '../pages/admin/AdminSectionsPage';
 import { AdminLessonsPage } from '../pages/admin/AdminLessonsPage';
 import { AdminOrdersPage } from '../pages/admin/AdminOrdersPage';
 import { AdminCouponsPage } from '../pages/admin/AdminCouponsPage';
+import { AdminAnalyticsPage } from '../pages/admin/AdminAnalyticsPage';
+import { AdminActivityPage } from '../pages/admin/AdminActivityPage';
 import { CourseDetailsPage } from '../pages/CourseDetailsPage';
 import { CourseViewerPage } from '../pages/CourseViewerPage';
 import { LessonViewerPage } from '../pages/LessonViewerPage';
@@ -50,7 +52,7 @@ export default function App() {
       </AnimatePresence>
 
       {!showSplash && (
-        <div className="min-h-screen">
+        <div className="min-h-screen bg-background theme-transition">
           <Routes>
             <Route path="/" element={<RiwaqHomePage />} />
             <Route path="/courses" element={<RiwaqCoursesPage />} />
@@ -159,6 +161,22 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <AdminCouponsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/analytics"
+              element={
+                <ProtectedRoute>
+                  <AdminAnalyticsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/activity"
+              element={
+                <ProtectedRoute>
+                  <AdminActivityPage />
                 </ProtectedRoute>
               }
             />

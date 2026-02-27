@@ -28,6 +28,8 @@ import {
   getOrders,
   updateOrder,
   updateUserRole,
+  getActivityLog,
+  getAnalytics,
 } from "../controllers/admin.controller.js";
 
 const router = Router();
@@ -39,6 +41,8 @@ router.get("/admin/stats", requireAdmin, getStats);
 router.get("/admin/orders", requireAdmin, getOrders);
 router.put("/admin/orders/:id", requireAdmin, updateOrder);
 router.get("/admin/categories", requireAdmin, getCategories);
+router.get("/admin/activity", requireAdmin, getActivityLog);
+router.get("/admin/analytics", requireAdmin, getAnalytics);
 // Coupons are admin-only (accessed via AdminCouponsPage)
 
 // ── Instructor + Admin routes ───────────────────────────────────────────────

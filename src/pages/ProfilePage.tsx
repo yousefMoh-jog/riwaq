@@ -8,6 +8,7 @@ import { downloadCertificate } from '../lib/certificate';
 import { RiwaqHeader } from '../app/components/RiwaqHeader';
 import { RiwaqFooter } from '../app/components/RiwaqFooter';
 import { CourseCard } from '../app/components/CourseCard';
+import { useTheme } from '../context/ThemeContext';
 import {
   BookOpen, Heart, Trophy, Calendar, Lock,
   CheckCircle, Download, User, Loader2,
@@ -43,10 +44,10 @@ interface FavoriteCourse {
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'courses',      label: 'دوراتي',     icon: <BookOpen  size={17} /> },
-  { id: 'favorites',   label: 'مفضلاتي',    icon: <Heart     size={17} /> },
-  { id: 'certificates',label: 'شهاداتي',    icon: <Trophy    size={17} /> },
-  { id: 'settings',    label: 'الإعدادات',  icon: <Lock      size={17} /> },
+  { id: 'courses',      label: 'دوراتي',    icon: <BookOpen size={17} /> },
+  { id: 'favorites',   label: 'مفضلاتي',   icon: <Heart    size={17} /> },
+  { id: 'certificates',label: 'شهاداتي',   icon: <Trophy   size={17} /> },
+  { id: 'settings',    label: 'الإعدادات', icon: <Lock     size={17} /> },
 ];
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -55,17 +56,15 @@ export function ProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('courses');
 
-  // Data
   const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
   const [favorites,       setFavorites]       = useState<FavoriteCourse[]>([]);
   const [loadingCourses,   setLoadingCourses]  = useState(true);
   const [loadingFavorites, setLoadingFavorites]= useState(true);
 
-  // Password form
-  const [currentPassword,  setCurrentPassword]  = useState('');
-  const [newPassword,      setNewPassword]      = useState('');
-  const [confirmPassword,  setConfirmPassword]  = useState('');
-  const [pwLoading,        setPwLoading]        = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword,     setNewPassword]     = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [pwLoading,       setPwLoading]       = useState(false);
   const [pwMessage, setPwMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -99,7 +98,6 @@ export function ProfilePage() {
     finally { setLoadingFavorites(false); }
   };
 
-  // Derived stats
   const totalCompletedLessons = enrolledCourses.reduce((s, c) => s + c.progress.completedLessons, 0);
   const totalLessons           = enrolledCourses.reduce((s, c) => s + c.progress.totalLessons,    0);
   const overallPct             = totalLessons > 0 ? Math.round((totalCompletedLessons / totalLessons) * 100) : 0;
@@ -134,8 +132,8 @@ export function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-9 h-9 animate-spin" style={{ color: '#3B2F82' }} />
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
+        <Loader2 className="w-9 h-9 animate-spin text-[#3B2F82] dark:text-[#8478C9]" />
       </div>
     );
   }
@@ -148,15 +146,14 @@ export function ProfilePage() {
     .toUpperCase();
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#f4f5f9' }}>
+    <div className="min-h-screen flex flex-col bg-[#f4f5f9] dark:bg-slate-950 theme-transition">
       <RiwaqHeader />
 
       {/* ══ Hero ════════════════════════════════════════════════════════════ */}
       <section
-        style={{ background: 'linear-gradient(135deg, #2d2468 0%, #3B2F82 40%, #6467AD 100%)' }}
         className="relative overflow-hidden py-14 px-4"
+        style={{ background: 'linear-gradient(135deg, #2d2468 0%, #3B2F82 40%, #6467AD 100%)' }}
       >
-        {/* Decorative blobs */}
         <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-white/[0.03]" />
@@ -180,7 +177,7 @@ export function ProfilePage() {
             transition={{ duration: 0.4, delay: 0.1 }}
             className="text-white text-center sm:text-right flex-1"
           >
-            <h1 className="text-3xl md:text-4xl font-bold mb-1">
+            <h1 className="text-3xl md:text-4xl font-bold mb-1 text-white">
               {user.fullName || 'المستخدم'}
             </h1>
             <p className="text-white/60 text-sm mb-4">{user.email}</p>
@@ -210,62 +207,58 @@ export function ProfilePage() {
       {/* ══ Stats Row ══════════════════════════════════════════════════════ */}
       <div className="max-w-4xl mx-auto w-full px-4 -mt-7 relative z-20 mb-6">
         <div className="grid grid-cols-3 gap-3 sm:gap-4">
+
           {/* Enrolled */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-white rounded-2xl shadow-lg border border-white/80 p-4 sm:p-5 flex flex-col items-center gap-2 text-center"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-4 sm:p-5 flex flex-col items-center gap-2 text-center theme-transition"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
-                 style={{ background: 'linear-gradient(135deg, #eef0fb, #dde0f7)' }}>
-              <BookOpen size={20} style={{ color: '#3B2F82' }} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-[#eef0fb] dark:bg-[#8478C9]/20">
+              <BookOpen size={20} className="text-[#3B2F82] dark:text-[#8478C9]" />
             </div>
             {loadingCourses
-              ? <Loader2 size={18} className="animate-spin text-muted-foreground" />
-              : <span className="text-xl sm:text-2xl font-bold" style={{ color: '#3B2F82' }}>
+              ? <Loader2 size={18} className="animate-spin text-slate-400" />
+              : <span className="text-xl sm:text-2xl font-bold text-[#3B2F82] dark:text-[#8478C9]">
                   {enrolledCourses.length}
                 </span>
             }
-            <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">الدورات المسجّلة</p>
+            <p className="text-[11px] sm:text-xs text-gray-400 dark:text-slate-500 leading-tight">الدورات المسجّلة</p>
           </motion.div>
 
-          {/* Overall Progress */}
+          {/* Progress */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.22 }}
-            className="bg-white rounded-2xl shadow-lg border border-white/80 p-4 sm:p-5 flex flex-col items-center gap-2 text-center"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-4 sm:p-5 flex flex-col items-center gap-2 text-center theme-transition"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-emerald-50">
-              <CheckCircle size={20} className="text-emerald-600" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-emerald-50 dark:bg-emerald-900/30">
+              <CheckCircle size={20} className="text-emerald-600 dark:text-emerald-400" />
             </div>
             {loadingCourses
-              ? <Loader2 size={18} className="animate-spin text-muted-foreground" />
-              : <span className="text-xl sm:text-2xl font-bold text-emerald-600">{overallPct}%</span>
+              ? <Loader2 size={18} className="animate-spin text-slate-400" />
+              : <span className="text-xl sm:text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+                  {overallPct}%
+                </span>
             }
-            <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">إجمالي التقدم</p>
+            <p className="text-[11px] sm:text-xs text-gray-400 dark:text-slate-500 leading-tight">إجمالي التقدم</p>
           </motion.div>
 
           {/* Certificates */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.29 }}
-            className="bg-white rounded-2xl shadow-lg border border-white/80 p-4 sm:p-5 flex flex-col items-center gap-2 text-center"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.29 }}
+            className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-4 sm:p-5 flex flex-col items-center gap-2 text-center theme-transition"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
-                 style={{ background: 'linear-gradient(135deg, #fef9ec, #fdf0c0)' }}>
-              <Trophy size={20} style={{ color: '#d4a012' }} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center bg-amber-50 dark:bg-amber-900/20">
+              <Trophy size={20} className="text-amber-500 dark:text-amber-400" />
             </div>
             {loadingCourses
-              ? <Loader2 size={18} className="animate-spin text-muted-foreground" />
-              : <span className="text-xl sm:text-2xl font-bold" style={{ color: '#d4a012' }}>
+              ? <Loader2 size={18} className="animate-spin text-slate-400" />
+              : <span className="text-xl sm:text-2xl font-bold text-amber-500 dark:text-amber-400">
                   {certificates.length}
                 </span>
             }
-            <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">الشهادات المكتسبة</p>
+            <p className="text-[11px] sm:text-xs text-gray-400 dark:text-slate-500 leading-tight">الشهادات المكتسبة</p>
           </motion.div>
+
         </div>
       </div>
 
@@ -273,7 +266,7 @@ export function ProfilePage() {
       <main className="flex-1 max-w-4xl mx-auto w-full px-4 pb-12">
 
         {/* Tab Navigation */}
-        <div className="bg-white rounded-2xl shadow-sm border border-border/40 mb-5 overflow-hidden">
+        <div className="bg-white dark:bg-slate-800/60 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 mb-5 overflow-hidden theme-transition">
           <div className="flex" role="tablist">
             {TABS.map((tab) => (
               <button
@@ -283,10 +276,9 @@ export function ProfilePage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex-1 flex items-center justify-center gap-2 py-4 text-xs sm:text-sm transition-colors duration-200 ${
                   activeTab === tab.id
-                    ? 'font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'font-medium text-[#3B2F82] dark:text-[#8478C9]'
+                    : 'text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300'
                 }`}
-                style={ activeTab === tab.id ? { color: '#3B2F82' } : {} }
               >
                 {tab.icon}
                 <span className="hidden sm:inline">{tab.label}</span>
@@ -294,8 +286,7 @@ export function ProfilePage() {
                 {activeTab === tab.id && (
                   <motion.div
                     layoutId="profile-tab-underline"
-                    className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full"
-                    style={{ background: '#3B2F82' }}
+                    className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-t-full bg-[#3B2F82] dark:bg-[#8478C9]"
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
@@ -316,12 +307,11 @@ export function ProfilePage() {
 
             {/* ── دوراتي ──────────────────────────────────────────────── */}
             {activeTab === 'courses' && (
-              loadingCourses ? (
-                <LoadingSpinner />
-              ) : enrolledCourses.length === 0 ? (
+              loadingCourses ? <LoadingSpinner /> :
+              enrolledCourses.length === 0 ? (
                 <EmptyState
-                  icon={<BookOpen size={44} style={{ color: '#3B2F82' }} />}
-                  bg="#eef0fb"
+                  icon={<BookOpen size={44} className="text-[#3B2F82] dark:text-[#8478C9]" />}
+                  lightBg="#eef0fb" darkBg="rgba(132,120,201,0.15)"
                   title="لم تسجّل في أي دورة بعد"
                   subtitle="استكشف مئات الدورات وابدأ رحلتك التعليمية الآن"
                   actionLabel="استكشاف الدورات"
@@ -330,12 +320,7 @@ export function ProfilePage() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {enrolledCourses.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
+                    <motion.div key={course.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                       <CourseProgressCard course={course} />
                     </motion.div>
                   ))}
@@ -345,12 +330,11 @@ export function ProfilePage() {
 
             {/* ── مفضلاتي ─────────────────────────────────────────────── */}
             {activeTab === 'favorites' && (
-              loadingFavorites ? (
-                <LoadingSpinner />
-              ) : favorites.length === 0 ? (
+              loadingFavorites ? <LoadingSpinner /> :
+              favorites.length === 0 ? (
                 <EmptyState
                   icon={<Heart size={44} className="text-rose-400" />}
-                  bg="#fff1f2"
+                  lightBg="#fff1f2" darkBg="rgba(251,113,133,0.1)"
                   title="قائمة المفضلة فارغة"
                   subtitle="اضغط على أيقونة القلب في أي دورة لإضافتها إلى مفضلتك"
                   actionLabel="استكشاف الدورات"
@@ -359,22 +343,13 @@ export function ProfilePage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {favorites.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.05 }}
-                    >
+                    <motion.div key={course.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
                       <CourseCard
-                        id={course.id}
-                        title={course.title}
-                        description={course.description}
-                        price={course.price}
-                        thumbnail_url={course.thumbnail_url}
+                        id={course.id} title={course.title} description={course.description}
+                        price={course.price} thumbnail_url={course.thumbnail_url}
                         educational_level={course.educational_level}
                         category_name={course.category_name ?? undefined}
-                        showFavorite={true}
-                        isFavorited={true}
+                        showFavorite={true} isFavorited={true}
                       />
                     </motion.div>
                   ))}
@@ -384,12 +359,11 @@ export function ProfilePage() {
 
             {/* ── شهاداتي ─────────────────────────────────────────────── */}
             {activeTab === 'certificates' && (
-              loadingCourses ? (
-                <LoadingSpinner />
-              ) : certificates.length === 0 ? (
+              loadingCourses ? <LoadingSpinner /> :
+              certificates.length === 0 ? (
                 <EmptyState
-                  icon={<Trophy size={44} style={{ color: '#d4a012' }} />}
-                  bg="#fef9ec"
+                  icon={<Trophy size={44} className="text-amber-500 dark:text-amber-400" />}
+                  lightBg="#fef9ec" darkBg="rgba(245,158,11,0.1)"
                   title="لم تكسب أي شهادة بعد"
                   subtitle="أكمل دورة كاملة حتى تحصل على شهادتك الإلكترونية"
                   actionLabel="الذهاب إلى دوراتي"
@@ -399,16 +373,8 @@ export function ProfilePage() {
               ) : (
                 <div className="space-y-3">
                   {certificates.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.07 }}
-                    >
-                      <CertificateCard
-                        course={course}
-                        studentName={user.fullName || user.email || 'الطالب'}
-                      />
+                    <motion.div key={course.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}>
+                      <CertificateCard course={course} studentName={user.fullName || user.email || 'الطالب'} />
                     </motion.div>
                   ))}
                 </div>
@@ -418,42 +384,39 @@ export function ProfilePage() {
             {/* ── الإعدادات ────────────────────────────────────────────── */}
             {activeTab === 'settings' && (
               <div className="space-y-5">
+
                 {/* Account Info */}
-                <div className="bg-white rounded-2xl shadow-sm border border-border/40 p-6">
+                <div className="bg-white dark:bg-slate-800/60 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 theme-transition">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                         style={{ background: '#eef0fb' }}>
-                      <User size={17} style={{ color: '#3B2F82' }} />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#eef0fb] dark:bg-[#8478C9]/20">
+                      <User size={17} className="text-[#3B2F82] dark:text-[#8478C9]" />
                     </div>
-                    <h2 className="text-base font-medium">معلومات الحساب</h2>
+                    <h2 className="text-base font-medium text-gray-900 dark:text-white">معلومات الحساب</h2>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
-                      { label: 'الاسم الكامل',     value: user.fullName || 'غير محدد' },
-                      { label: 'البريد الإلكتروني', value: user.email   || 'غير محدد' },
-                      { label: 'رقم الهاتف',        value: user.phone,  ltr: true },
-                      { label: 'المستوى التعليمي',  value: educationalLevelLabel(user.educationalLevel) },
+                      { label: 'الاسم الكامل',      value: user.fullName || 'غير محدد' },
+                      { label: 'البريد الإلكتروني',  value: user.email   || 'غير محدد' },
+                      { label: 'رقم الهاتف',          value: user.phone,  ltr: true },
+                      { label: 'المستوى التعليمي',   value: educationalLevelLabel(user.educationalLevel) },
                     ].map(({ label, value, ltr }) => (
-                      <div key={label}
-                           className="rounded-xl px-4 py-3 border border-border/40"
-                           style={{ background: '#f7f8fc' }}>
-                        <p className="text-[11px] text-muted-foreground mb-0.5">{label}</p>
-                        <p className="text-sm font-medium" dir={ltr ? 'ltr' : undefined}>{value}</p>
+                      <div key={label} className="rounded-xl px-4 py-3 border border-gray-200 dark:border-slate-600/50 bg-gray-50 dark:bg-slate-700/50 theme-transition">
+                        <p className="text-[11px] text-gray-400 dark:text-slate-500 mb-0.5">{label}</p>
+                        <p className="text-sm font-medium text-gray-800 dark:text-slate-200" dir={ltr ? 'ltr' : undefined}>{value}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {/* Password Change */}
-                <div className="bg-white rounded-2xl shadow-sm border border-border/40 p-6">
+                <div className="bg-white dark:bg-slate-800/60 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-6 theme-transition">
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                         style={{ background: '#eef0fb' }}>
-                      <Lock size={17} style={{ color: '#3B2F82' }} />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-[#eef0fb] dark:bg-[#8478C9]/20">
+                      <Lock size={17} className="text-[#3B2F82] dark:text-[#8478C9]" />
                     </div>
                     <div>
-                      <h2 className="text-base font-medium">تغيير كلمة المرور</h2>
-                      <p className="text-[11px] text-muted-foreground">استخدم كلمة مرور قوية لحماية حسابك</p>
+                      <h2 className="text-base font-medium text-gray-900 dark:text-white">تغيير كلمة المرور</h2>
+                      <p className="text-[11px] text-gray-400 dark:text-slate-500">استخدم كلمة مرور قوية لحماية حسابك</p>
                     </div>
                   </div>
 
@@ -463,8 +426,8 @@ export function ProfilePage() {
                       animate={{ opacity: 1, y: 0 }}
                       className={`mb-5 p-4 rounded-xl text-sm ${
                         pwMessage.type === 'success'
-                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : 'bg-red-50 text-red-800 border border-red-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700/50'
+                          : 'bg-red-50 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-200 dark:border-red-700/50'
                       }`}
                     >
                       {pwMessage.text}
@@ -473,20 +436,26 @@ export function ProfilePage() {
 
                   <form onSubmit={handleChangePassword} className="space-y-4">
                     {[
-                      { label: 'كلمة المرور الحالية',         value: currentPassword, set: setCurrentPassword,  min: 1 },
-                      { label: 'كلمة المرور الجديدة',          value: newPassword,      set: setNewPassword,      min: 8 },
-                      { label: 'تأكيد كلمة المرور الجديدة',   value: confirmPassword,  set: setConfirmPassword,  min: 8 },
+                      { label: 'كلمة المرور الحالية',       value: currentPassword, set: setCurrentPassword, min: 1 },
+                      { label: 'كلمة المرور الجديدة',        value: newPassword,     set: setNewPassword,     min: 8 },
+                      { label: 'تأكيد كلمة المرور الجديدة', value: confirmPassword, set: setConfirmPassword, min: 8 },
                     ].map(({ label, value, set, min }) => (
                       <div key={label}>
-                        <label className="block text-sm mb-1.5 text-foreground/80">{label}</label>
+                        <label className="block text-sm mb-1.5 text-gray-600 dark:text-slate-400">{label}</label>
                         <input
                           type="password"
                           value={value}
                           onChange={(e) => set(e.target.value)}
                           required
                           minLength={min}
-                          style={{ background: '#f7f8fc' }}
-                          className="w-full px-4 py-2.5 border border-border/60 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/25 transition"
+                          className="w-full px-4 py-2.5
+                            border border-gray-200 dark:border-slate-600
+                            rounded-xl text-sm
+                            bg-gray-50 dark:bg-slate-700/50
+                            text-gray-900 dark:text-slate-100
+                            placeholder-gray-400 dark:placeholder-slate-500
+                            focus:outline-none focus:ring-2 focus:ring-[#3B2F82]/30 dark:focus:ring-[#8478C9]/30
+                            theme-transition"
                         />
                       </div>
                     ))}
@@ -494,8 +463,8 @@ export function ProfilePage() {
                     <button
                       type="submit"
                       disabled={pwLoading}
-                      style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
                       className="w-full text-white px-6 py-3 rounded-xl text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mt-2"
+                      style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
                     >
                       {pwLoading
                         ? <><Loader2 size={15} className="animate-spin" /> جاري الحفظ...</>
@@ -503,6 +472,7 @@ export function ProfilePage() {
                     </button>
                   </form>
                 </div>
+
               </div>
             )}
 
@@ -520,44 +490,49 @@ export function ProfilePage() {
 function LoadingSpinner() {
   return (
     <div className="flex justify-center py-24">
-      <Loader2 className="w-10 h-10 animate-spin" style={{ color: '#3B2F82' }} />
+      <Loader2 className="w-10 h-10 animate-spin text-[#3B2F82] dark:text-[#8478C9]" />
     </div>
   );
 }
 
 function EmptyState({
-  icon, bg, title, subtitle, actionLabel, actionTo, onAction,
+  icon, lightBg, darkBg, title, subtitle, actionLabel, actionTo, onAction,
 }: {
   icon: React.ReactNode;
-  bg: string;
+  lightBg: string;
+  darkBg: string;
   title: string;
   subtitle: string;
   actionLabel: string;
   actionTo: string;
   onAction?: () => void;
 }) {
+  const { isDark } = useTheme();
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-border/40 py-20 flex flex-col items-center gap-4 text-center px-6">
-      <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ background: bg }}>
+    <div className="bg-white dark:bg-slate-800/60 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 py-20 flex flex-col items-center gap-4 text-center px-6 theme-transition">
+      <div
+        className="w-20 h-20 rounded-2xl flex items-center justify-center"
+        style={{ background: isDark ? darkBg : lightBg }}
+      >
         {icon}
       </div>
       <div>
-        <h3 className="text-lg font-medium mb-1">{title}</h3>
-        <p className="text-sm text-muted-foreground max-w-xs">{subtitle}</p>
+        <h3 className="text-lg font-medium mb-1 text-gray-900 dark:text-white">{title}</h3>
+        <p className="text-sm text-gray-400 dark:text-slate-500 max-w-xs">{subtitle}</p>
       </div>
       {onAction ? (
         <button
           onClick={onAction}
-          style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
           className="mt-1 px-7 py-2.5 text-white text-sm rounded-xl hover:opacity-90 transition-opacity"
+          style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
         >
           {actionLabel}
         </button>
       ) : (
         <Link
           to={actionTo}
-          style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
           className="mt-1 px-7 py-2.5 text-white text-sm rounded-xl hover:opacity-90 transition-opacity"
+          style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
         >
           {actionLabel}
         </Link>
@@ -573,48 +548,39 @@ function CourseProgressCard({ course }: { course: EnrolledCourse }) {
   return (
     <Link
       to={`/course-viewer/${course.id}`}
-      className="group block bg-white rounded-2xl shadow-sm border border-border/40 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+      className="group block bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 hover:shadow-md dark:hover:shadow-slate-900/50 hover:-translate-y-0.5 transition-all duration-200 theme-transition"
     >
       <div className="flex items-start justify-between gap-2 mb-3">
-        <h3 className="text-sm font-medium line-clamp-2 flex-1 leading-snug">{course.title}</h3>
+        <h3 className="text-sm font-medium line-clamp-2 flex-1 leading-snug text-gray-900 dark:text-white">
+          {course.title}
+        </h3>
         {done ? (
           <span className="shrink-0 inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full text-white bg-emerald-500">
             <CheckCircle size={10} /> مكتملة
           </span>
         ) : (
-          <span
-            className="shrink-0 text-[11px] px-2 py-0.5 rounded-full font-medium"
-            style={{ background: '#eef0fb', color: '#3B2F82' }}
-          >
+          <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full font-medium bg-[#eef0fb] dark:bg-[#8478C9]/20 text-[#3B2F82] dark:text-[#8478C9]">
             {pct}%
           </span>
         )}
       </div>
 
-      {/* Progress bar */}
       <div className="space-y-1.5 mb-3">
-        <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
+        <div className="w-full bg-gray-100 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${pct}%` }}
             transition={{ duration: 0.9, ease: 'easeOut', delay: 0.1 }}
             className="h-full rounded-full"
-            style={{
-              background: done
-                ? '#16a34a'
-                : 'linear-gradient(90deg, #3B2F82, #6467AD)',
-            }}
+            style={{ background: done ? '#16a34a' : 'linear-gradient(90deg, #3B2F82, #6467AD)' }}
           />
         </div>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-[11px] text-gray-400 dark:text-slate-500">
           {course.progress.completedLessons} من {course.progress.totalLessons} درس مكتمل
         </p>
       </div>
 
-      <div
-        className="flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity"
-        style={{ color: '#3B2F82' }}
-      >
+      <div className="flex items-center gap-1 text-xs font-medium text-[#3B2F82] dark:text-[#8478C9] opacity-0 group-hover:opacity-100 transition-opacity">
         <span>متابعة التعلّم</span>
         <ArrowLeft size={12} />
       </div>
@@ -625,31 +591,27 @@ function CourseProgressCard({ course }: { course: EnrolledCourse }) {
 function CertificateCard({ course, studentName }: { course: EnrolledCourse; studentName: string }) {
   return (
     <div
-      className="bg-white rounded-2xl shadow-sm border border-border/40 p-5 flex items-center gap-4"
+      className="bg-white dark:bg-slate-800/50 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 flex items-center gap-4 theme-transition"
       style={{ borderRight: '4px solid #F3BD32' }}
     >
-      {/* Trophy icon */}
-      <div
-        className="w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, #fef9ec, #fdf0c0)' }}
-      >
-        <Trophy size={26} style={{ color: '#d4a012' }} />
+      <div className="w-14 h-14 rounded-2xl shrink-0 flex items-center justify-center bg-amber-50 dark:bg-amber-900/20">
+        <Trophy size={26} className="text-amber-500 dark:text-amber-400" />
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-medium line-clamp-1 mb-0.5">{course.title}</h3>
-        <p className="text-xs text-emerald-600 flex items-center gap-1">
+        <h3 className="text-sm font-medium line-clamp-1 mb-0.5 text-gray-900 dark:text-white">
+          {course.title}
+        </h3>
+        <p className="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
           <CheckCircle size={11} />
           مكتملة بنجاح — 100٪
         </p>
       </div>
 
-      {/* Download button */}
       <button
         onClick={() => downloadCertificate({ studentName, courseTitle: course.title })}
-        style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
         className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-xs font-medium hover:opacity-90 transition-opacity shadow-sm"
+        style={{ background: 'linear-gradient(135deg, #3B2F82, #6467AD)' }}
       >
         <Download size={13} />
         <span className="hidden sm:inline">تحميل الشهادة</span>

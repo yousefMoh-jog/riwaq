@@ -19,22 +19,21 @@ interface Course {
 export function RiwaqCoursesPage() {
   const { isAuthenticated } = useAuth();
 
-  const [searchTerm, setSearchTerm]           = useState('');
-  const [selectedLevel, setSelectedLevel]     = useState('all');
+  const [searchTerm, setSearchTerm]             = useState('');
+  const [selectedLevel, setSelectedLevel]       = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [courses, setCourses]                 = useState<Course[]>([]);
-  const [favoritedIds, setFavoritedIds]       = useState<Set<string>>(new Set());
-  const [loading, setLoading]                 = useState(true);
-  const [error, setError]                     = useState<string | null>(null);
+  const [courses, setCourses]                   = useState<Course[]>([]);
+  const [favoritedIds, setFavoritedIds]         = useState<Set<string>>(new Set());
+  const [loading, setLoading]                   = useState(true);
+  const [error, setError]                       = useState<string | null>(null);
 
   const levels = [
-    { id: 'all',          label: 'جميع المستويات' },
-    { id: 'preparatory',  label: 'إعدادي' },
-    { id: 'secondary',    label: 'ثانوي' },
-    { id: 'university',   label: 'جامعي' },
+    { id: 'all',         label: 'جميع المستويات' },
+    { id: 'preparatory', label: 'إعدادي' },
+    { id: 'secondary',   label: 'ثانوي' },
+    { id: 'university',  label: 'جامعي' },
   ];
 
-  // Derive unique categories from loaded courses
   const categories = [
     { id: 'all', label: 'جميع الفئات' },
     ...Array.from(
@@ -46,11 +45,8 @@ export function RiwaqCoursesPage() {
     ),
   ];
 
-  useEffect(() => {
-    fetchCourses();
-  }, []);
+  useEffect(() => { fetchCourses(); }, []);
 
-  // Fetch favorite IDs once the user is authenticated so we can pre-fill hearts
   useEffect(() => {
     if (!isAuthenticated) { setFavoritedIds(new Set()); return; }
     fetchFavoriteIds();
@@ -72,9 +68,7 @@ export function RiwaqCoursesPage() {
       const { data } = await api.get('/favorites');
       const ids = (data.favorites as { id: string }[]).map((f) => f.id);
       setFavoritedIds(new Set(ids));
-    } catch {
-      // Non-critical — hearts simply start un-filled
-    }
+    } catch { /* hearts simply start un-filled */ }
   };
 
   const hasActiveFilters = searchTerm !== '' || selectedLevel !== 'all' || selectedCategory !== 'all';
@@ -97,63 +91,92 @@ export function RiwaqCoursesPage() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 theme-transition">
       <RiwaqHeader currentPage="courses" />
 
       <main className="flex-1">
-        {/* Page Header */}
-        <section className="bg-gradient-to-br from-primary to-secondary text-primary-foreground py-12">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h1 className="text-3xl md:text-4xl mb-4 text-center">مكتبة الدورات التعليمية</h1>
-            <p className="text-lg text-primary-foreground/90 text-center max-w-2xl mx-auto">
+
+        {/* ── Page Header ──────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden py-12
+          bg-gradient-to-br from-[#2d2468] via-[#3B2F82] to-[#6467AD]
+          dark:from-slate-950 dark:via-[#1a1640] dark:to-[#2d2468]
+          text-white">
+          <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/5" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-white/5" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <h1 className="text-3xl md:text-4xl mb-4 text-center text-white font-bold">
+              مكتبة الدورات التعليمية
+            </h1>
+            <p className="text-lg text-white/80 text-center max-w-2xl mx-auto">
               اختر من بين مجموعة واسعة من الدورات التعليمية المتخصصة في مختلف المجالات
             </p>
           </div>
         </section>
 
-        {/* Filters */}
-        <section className="bg-background border-b border-border py-5 sticky top-0 z-10 shadow-sm">
+        {/* ── Filters ──────────────────────────────────────────────────────── */}
+        <section className="
+          bg-white dark:bg-slate-950
+          border-b border-gray-200 dark:border-slate-800
+          py-5 sticky top-0 z-10
+          shadow-sm dark:shadow-slate-900/80
+          theme-transition">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
-            {/* Row 1: Search */}
+
+            {/* Search */}
             <div className="flex gap-3 items-center">
               <div className="relative flex-1">
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <Search
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500"
+                  size={18}
+                />
                 <input
                   type="text"
                   placeholder="ابحث باسم الدورة أو الفئة..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pr-10 pl-4 py-2.5 bg-input-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full pr-10 pl-4 py-2.5
+                    bg-gray-100 dark:bg-slate-800
+                    border border-gray-200 dark:border-slate-700
+                    rounded-lg text-sm
+                    text-gray-900 dark:text-slate-100
+                    placeholder-gray-400 dark:placeholder-slate-500
+                    focus:outline-none focus:ring-2 focus:ring-[#3B2F82] dark:focus:ring-[#8478C9]
+                    theme-transition"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500 hover:text-gray-700 dark:hover:text-slate-300"
                   >
                     ✕
                   </button>
                 )}
               </div>
+
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="whitespace-nowrap text-xs text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-2.5 transition-colors"
+                  className="whitespace-nowrap text-xs
+                    text-gray-500 dark:text-slate-400
+                    hover:text-gray-800 dark:hover:text-slate-200
+                    border border-gray-300 dark:border-slate-700
+                    rounded-lg px-3 py-2.5 transition-colors theme-transition"
                 >
                   مسح الفلاتر
                 </button>
               )}
             </div>
 
-            {/* Row 2: Level filter */}
+            {/* Level pills */}
             <div className="flex gap-2 overflow-x-auto pb-0.5">
               {levels.map((level) => (
                 <button
                   key={level.id}
                   onClick={() => setSelectedLevel(level.id)}
-                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
+                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors theme-transition ${
                     selectedLevel === level.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      ? 'bg-[#3B2F82] dark:bg-[#8478C9] text-white'
+                      : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                   }`}
                 >
                   {level.label}
@@ -161,17 +184,17 @@ export function RiwaqCoursesPage() {
               ))}
             </div>
 
-            {/* Row 3: Category filter */}
+            {/* Category pills */}
             {categories.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-0.5">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors border ${
+                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors border theme-transition ${
                       selectedCategory === cat.id
-                        ? 'bg-secondary text-secondary-foreground border-secondary'
-                        : 'bg-transparent text-muted-foreground border-border hover:bg-muted/50'
+                        ? 'bg-[#6467AD] dark:bg-slate-700 text-white dark:text-slate-100 border-[#6467AD] dark:border-slate-600'
+                        : 'bg-transparent text-gray-500 dark:text-slate-400 border-gray-300 dark:border-slate-700 hover:bg-gray-100 dark:hover:bg-slate-800'
                     }`}
                   >
                     {cat.label}
@@ -182,33 +205,36 @@ export function RiwaqCoursesPage() {
           </div>
         </section>
 
-        {/* Courses Grid */}
-        <section className="py-12 bg-background">
+        {/* ── Courses Grid ─────────────────────────────────────────────────── */}
+        <section className="py-12 bg-white dark:bg-slate-950 theme-transition">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
             {loading ? (
               <div className="text-center py-16">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
-                <p className="mt-4 text-muted-foreground">جاري تحميل الدورات...</p>
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[#3B2F82] dark:border-[#8478C9]" />
+                <p className="mt-4 text-gray-500 dark:text-slate-400">جاري تحميل الدورات...</p>
               </div>
+
             ) : error ? (
               <div className="text-center py-16">
-                <p className="text-xl text-red-600">{error}</p>
+                <p className="text-xl text-red-500 dark:text-red-400">{error}</p>
                 <button
                   onClick={fetchCourses}
-                  className="mt-4 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
+                  className="mt-4 px-6 py-2 bg-[#3B2F82] dark:bg-[#8478C9] text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   إعادة المحاولة
                 </button>
               </div>
+
             ) : (
               <>
-                <div className="mb-6 text-muted-foreground">
+                <p className="mb-6 text-sm text-gray-400 dark:text-slate-500">
                   عرض {filteredCourses.length} من {courses.length} دورة
-                </div>
+                </p>
 
                 {filteredCourses.length === 0 ? (
                   <div className="text-center py-16">
-                    <p className="text-xl text-muted-foreground">
+                    <p className="text-xl text-gray-400 dark:text-slate-500">
                       {courses.length === 0 ? 'لا توجد دورات حالياً' : 'لا توجد دورات مطابقة لبحثك'}
                     </p>
                   </div>
@@ -234,6 +260,7 @@ export function RiwaqCoursesPage() {
             )}
           </div>
         </section>
+
       </main>
 
       <RiwaqFooter />

@@ -6,6 +6,7 @@ import Hls from 'hls.js';
 import {
   CheckCircle, XCircle, ChevronLeft, ChevronRight, ChevronDown,
   ArrowRight, BookOpen, PlayCircle, Circle, Menu, X, SkipForward, Award, Download,
+  FileText, File, FileImage,
 } from 'lucide-react';
 import { downloadCertificate } from '../lib/certificate';
 
@@ -56,6 +57,43 @@ function formatDuration(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return s > 0 ? `${m}:${String(s).padStart(2, '0')}` : `${m} د`;
+}
+
+// Extracts file metadata from an attachment URL for smart icon + label display.
+function getAttachmentMeta(url: string): {
+  fileName: string;
+  icon: React.ReactNode;
+  label: string;
+  colorClass: string;
+} {
+  let fileName = 'ملف مرفق';
+  try {
+    const path = url.startsWith('http') ? new URL(url).pathname : url;
+    const raw = path.split('/').pop()?.split('?')[0] ?? '';
+    if (raw) fileName = decodeURIComponent(raw);
+  } catch {
+    fileName = url.split('/').pop()?.split('?')[0] ?? 'ملف مرفق';
+  }
+  const ext = fileName.split('.').pop()?.toLowerCase() ?? '';
+  if (ext === 'pdf') {
+    return { fileName, icon: <FileText size={22} />, label: 'ملف PDF', colorClass: 'bg-red-500/15 text-red-400' };
+  }
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext)) {
+    return { fileName, icon: <FileImage size={22} />, label: 'صورة', colorClass: 'bg-emerald-500/15 text-emerald-400' };
+  }
+  if (['doc', 'docx'].includes(ext)) {
+    return { fileName, icon: <FileText size={22} />, label: 'ملف Word', colorClass: 'bg-blue-500/15 text-blue-400' };
+  }
+  if (['ppt', 'pptx'].includes(ext)) {
+    return { fileName, icon: <File size={22} />, label: 'عرض تقديمي', colorClass: 'bg-orange-500/15 text-orange-400' };
+  }
+  if (['xls', 'xlsx'].includes(ext)) {
+    return { fileName, icon: <File size={22} />, label: 'جدول بيانات', colorClass: 'bg-green-500/15 text-green-400' };
+  }
+  if (['zip', 'rar', '7z'].includes(ext)) {
+    return { fileName, icon: <File size={22} />, label: 'ملف مضغوط', colorClass: 'bg-purple-500/15 text-purple-400' };
+  }
+  return { fileName, icon: <File size={22} />, label: 'ملف مرفق', colorClass: 'bg-slate-600/50 text-slate-400' };
 }
 
 // Appends enableApi=1 to a Bunny iframe embed URL so the player fires
@@ -473,7 +511,7 @@ export function LessonViewerPage() {
         <StudyHeader courseInfo={null} onToggleSidebar={() => {}} />
         <main className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[#8478C9] border-t-transparent rounded-full animate-spin" />
             <p className="text-slate-400 text-sm">جاري التحميل...</p>
           </div>
         </main>
@@ -489,7 +527,7 @@ export function LessonViewerPage() {
           <div className="text-center space-y-3">
             <BookOpen className="w-16 h-16 text-slate-600 mx-auto" />
             <p className="text-slate-300">الدرس غير موجود</p>
-            <Link to="/courses" className="text-primary hover:underline text-sm">العودة للدورات</Link>
+            <Link to="/courses" className="text-[#8478C9] hover:underline text-sm">العودة للدورات</Link>
           </div>
         </main>
       </div>
@@ -529,7 +567,7 @@ export function LessonViewerPage() {
                   {lesson?.courseId && (
                     <Link
                       to={`/course/${lesson.courseId}`}
-                      className="mt-1 px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 transition-colors"
+                      className="mt-1 px-4 py-2 bg-[#8478C9] text-white text-sm rounded-lg hover:bg-[#8478C9]/90 transition-colors"
                     >
                       عرض تفاصيل الدورة
                     </Link>
@@ -538,7 +576,7 @@ export function LessonViewerPage() {
               ) : !embedUrl && !streamUrl ? (
                 /* ── Stream URL not yet resolved — show spinner ─────── */
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900 gap-3">
-                  <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-10 h-10 border-4 border-[#8478C9] border-t-transparent rounded-full animate-spin" />
                   <p className="text-slate-400 text-sm">جاري تحميل الفيديو...</p>
                 </div>
               ) : embedUrl ? (
@@ -615,23 +653,10 @@ export function LessonViewerPage() {
               </button>
             </div>
 
-            {/* Download Resources — shown only when the lesson has an attachment */}
-            {lesson.attachmentUrl && (
-              <a
-                href={
-                  lesson.attachmentUrl.startsWith('http')
-                    ? lesson.attachmentUrl
-                    : `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8001').trim()}${lesson.attachmentUrl}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                download
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium bg-blue-600/20 text-blue-400 border border-blue-600/40 hover:bg-blue-600/30 transition-colors w-fit"
-              >
-                <Download size={16} />
-                تحميل المرفقات
-              </a>
-            )}
+            {/* Download Resources — only rendered when the lesson has an attachment */}
+            {lesson.attachmentUrl
+              ? <LessonAttachmentButton attachmentUrl={lesson.attachmentUrl} />
+              : null}
 
             {/* Progress Bar */}
             {progress && (
@@ -803,7 +828,7 @@ function AutoNextToast({
         <div className="flex flex-col gap-1.5 flex-shrink-0">
           <button
             onClick={onGoNow}
-            className="flex items-center gap-1 bg-primary text-white text-xs px-3 py-1.5 rounded-lg hover:bg-primary/90 transition-colors"
+            className="flex items-center gap-1 bg-[#8478C9] text-white text-xs px-3 py-1.5 rounded-lg hover:bg-[#8478C9]/90 transition-colors"
           >
             <SkipForward size={13} />
             <span>الآن</span>
@@ -817,6 +842,36 @@ function AutoNextToast({
         </div>
       </div>
     </div>
+  );
+}
+
+// ── Lesson Attachment Button ──────────────────────────────────────────────────
+
+function LessonAttachmentButton({ attachmentUrl }: { attachmentUrl: string }) {
+  const resolvedUrl = attachmentUrl.startsWith('http')
+    ? attachmentUrl
+    : `${(import.meta.env.VITE_API_URL ?? 'http://localhost:8001').trim()}${attachmentUrl}`;
+  const { fileName, icon, colorClass } = getAttachmentMeta(resolvedUrl);
+
+  return (
+    <a
+      href={resolvedUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      download
+      className="flex items-center gap-3 px-5 py-3.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 hover:border-[#8478C9]/50 rounded-xl transition-colors group w-fit"
+    >
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${colorClass}`}>
+        {icon}
+      </div>
+      <div className="min-w-0">
+        <p className="text-white text-sm font-semibold group-hover:text-[#8478C9] transition-colors">
+          تحميل المرفقات
+        </p>
+        <p className="text-slate-500 text-xs mt-0.5 truncate max-w-[200px]">{fileName}</p>
+      </div>
+      <Download size={16} className="text-slate-500 group-hover:text-[#8478C9] transition-colors flex-shrink-0 mr-1" />
+    </a>
   );
 }
 
@@ -961,7 +1016,7 @@ function SidebarContent({
       <div className="px-4 py-3 border-b border-slate-800 flex-shrink-0">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <BookOpen size={16} className="text-primary flex-shrink-0" />
+            <BookOpen size={16} className="text-[#8478C9] flex-shrink-0" />
             <span className="text-white text-sm font-semibold truncate">
               {courseInfo?.title ?? 'محتوى الدورة'}
             </span>
@@ -994,7 +1049,7 @@ function SidebarContent({
       <div className="flex-1 overflow-y-auto">
         {sidebarLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#8478C9] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : courseSections.length === 0 ? (
           <div className="py-12 text-center text-slate-500 text-sm">لا توجد دروس بعد</div>
@@ -1046,13 +1101,13 @@ function SidebarContent({
                           key={l.id}
                           to={`/lesson-viewer/${l.id}`}
                           className={`flex items-center gap-3 px-4 py-2.5 hover:bg-slate-800 transition-colors border-t border-slate-800/50 ${
-                            isActive ? 'bg-primary/10 border-r-2 border-r-primary' : ''
+                            isActive ? 'bg-[#8478C9]/10 border-r-2 border-r-[#8478C9]' : ''
                           }`}
                         >
                           {/* Status icon */}
                           <div className="flex-shrink-0">
                             {isActive ? (
-                              <PlayCircle size={16} className="text-primary" />
+                              <PlayCircle size={16} className="text-[#8478C9]" />
                             ) : isCompleted ? (
                               <CheckCircle size={15} className="text-green-500" />
                             ) : (

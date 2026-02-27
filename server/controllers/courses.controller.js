@@ -216,7 +216,8 @@ export async function getSectionLessons(req, res) {
               l.title_ar         AS title,
               l.duration_seconds AS duration,
               l.sort_order       AS order_index,
-              l.section_id
+              l.section_id,
+              l.attachment_url
        FROM lessons l
        WHERE l.section_id = $1
        ORDER BY l.sort_order ASC`,

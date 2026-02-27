@@ -35,7 +35,6 @@ export function AdminSectionsPage() {
   const { user } = useAuth();
   const location = useLocation();
 
-  // When redirected from course creation, state carries { courseId, courseTitle }
   const routeState = location.state as { courseId?: string; courseTitle?: string } | null;
   const autoOpenHandled = useRef(false);
 
@@ -54,7 +53,6 @@ export function AdminSectionsPage() {
     Promise.all([fetchSections(), fetchCourses()]);
   }, []);
 
-  // Auto-open "Add Section" modal when arriving from course creation
   useEffect(() => {
     if (autoOpenHandled.current) return;
     if (!routeState?.courseId || loading) return;
@@ -64,8 +62,6 @@ export function AdminSectionsPage() {
   }, [routeState?.courseId, loading]);
 
   if (user?.role !== 'ADMIN' && user?.role !== 'INSTRUCTOR') return <Navigate to="/dashboard" replace />;
-
-  // ── Data fetching ───────────────────────────────────────────────────────────
 
   const fetchSections = async () => {
     try {
@@ -83,9 +79,6 @@ export function AdminSectionsPage() {
     } catch { /* silent */ }
   };
 
-  // ── Derived ─────────────────────────────────────────────────────────────────
-
-  // Suggested sort_order = max existing + 1 for the chosen course
   const suggestedOrder = useMemo(() => {
     if (!formData.courseId) return 1;
     const courseSections = sections.filter((s) => s.course_id === formData.courseId);
@@ -93,8 +86,6 @@ export function AdminSectionsPage() {
       ? 1
       : Math.max(...courseSections.map((s) => s.order_index)) + 1;
   }, [sections, formData.courseId]);
-
-  // ── Validation ──────────────────────────────────────────────────────────────
 
   const validate = (): boolean => {
     const errors: FormErrors = {};
@@ -106,13 +97,10 @@ export function AdminSectionsPage() {
     return Object.keys(errors).length === 0;
   };
 
-  // ── Form submit ─────────────────────────────────────────────────────────────
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setServerError(null);
     if (!validate()) return;
-
     setSubmitting(true);
     try {
       const payload = {
@@ -120,7 +108,6 @@ export function AdminSectionsPage() {
         courseId: formData.courseId,
         orderIndex: parseInt(formData.orderIndex) || suggestedOrder,
       };
-
       if (editingSection) {
         await api.put(`/admin/sections/${editingSection.id}`, payload);
       } else {
@@ -138,15 +125,9 @@ export function AdminSectionsPage() {
     }
   };
 
-  // ── Edit / Delete / Close ───────────────────────────────────────────────────
-
   const handleEdit = (section: Section) => {
     setEditingSection(section);
-    setFormData({
-      title: section.title,
-      courseId: section.course_id,
-      orderIndex: String(section.order_index),
-    });
+    setFormData({ title: section.title, courseId: section.course_id, orderIndex: String(section.order_index) });
     setFormErrors({});
     setServerError(null);
     setShowModal(true);
@@ -169,7 +150,9 @@ export function AdminSectionsPage() {
     setSubmitting(false);
   };
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  const inputBase = 'w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3B2F82]/30 dark:focus:ring-[#8478C9]/30 bg-white dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400';
+  const inputNormal = `${inputBase} border-gray-200 dark:border-slate-600`;
+  const inputError  = `${inputBase} border-red-400 dark:border-red-500 bg-red-50 dark:bg-red-900/20`;
 
   return (
     <AdminLayout>
@@ -177,13 +160,13 @@ export function AdminSectionsPage() {
         {/* ── Header ── */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl mb-1">إدارة الأقسام</h1>
+            <h1 className="text-3xl mb-1 text-gray-900 dark:text-white">إدارة الأقسام</h1>
             {routeState?.courseTitle && (
-              <p className="text-sm text-primary font-medium mt-1">
+              <p className="text-sm text-[#3B2F82] dark:text-[#8478C9] font-medium mt-1">
                 ← تم إنشاء دورة "{routeState.courseTitle}" — أضف أقسامها الآن
               </p>
             )}
-            <p className="text-muted-foreground text-sm mt-1">إجمالي الأقسام: {sections.length}</p>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-1">إجمالي الأقسام: {sections.length}</p>
           </div>
           <button
             onClick={() => {
@@ -193,7 +176,7 @@ export function AdminSectionsPage() {
               setServerError(null);
               setShowModal(true);
             }}
-            className="bg-primary text-primary-foreground px-5 py-2.5 rounded-lg hover:bg-primary/90 transition-colors inline-flex items-center gap-2 text-sm font-medium"
+            className="bg-[#3B2F82] dark:bg-[#8478C9] text-white px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity inline-flex items-center gap-2 text-sm font-medium"
           >
             <Plus size={18} />
             إضافة قسم جديد
@@ -202,51 +185,51 @@ export function AdminSectionsPage() {
 
         {/* ── Table ── */}
         {loading ? (
-          <div className="flex items-center justify-center py-20 text-muted-foreground gap-2">
+          <div className="flex items-center justify-center py-20 text-gray-400 dark:text-slate-500 gap-2">
             <Loader2 size={20} className="animate-spin" />
             <span>جاري التحميل...</span>
           </div>
         ) : sections.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-border rounded-xl text-muted-foreground">
+          <div className="text-center py-20 border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-xl text-gray-400 dark:text-slate-500">
             <BookOpen size={40} className="mx-auto mb-3 opacity-30" />
             <p className="font-medium">لا توجد أقسام بعد</p>
             <p className="text-sm mt-1">ابدأ بإضافة قسم أول لإحدى الدورات.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-border overflow-hidden">
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden theme-transition">
             <table className="w-full">
-              <thead className="bg-muted/50 border-b border-border">
+              <thead className="bg-gray-50 dark:bg-slate-700/50 border-b border-gray-200 dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground">#</th>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground">العنوان</th>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground">الدورة</th>
-                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-muted-foreground">الإجراءات</th>
+                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-slate-400">#</th>
+                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-slate-400">العنوان</th>
+                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-slate-400">الدورة</th>
+                  <th className="px-6 py-3.5 text-right text-xs font-semibold text-gray-500 dark:text-slate-400">الإجراءات</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                 {sections.map((section) => (
-                  <tr key={section.id} className="hover:bg-muted/20 transition-colors">
+                  <tr key={section.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
                     <td className="px-6 py-4">
-                      <span className="text-xs text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                      <span className="text-xs text-gray-400 dark:text-slate-500 font-mono bg-gray-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
                         {section.order_index}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm font-medium">{section.title}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{section.title}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-slate-400">
                       {section.course_title || '—'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex gap-1">
                         <button
                           onClick={() => handleEdit(section)}
-                          className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600"
+                          className="p-2 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors text-blue-600 dark:text-blue-400"
                           title="تعديل"
                         >
                           <Edit size={16} />
                         </button>
                         <button
                           onClick={() => handleDelete(section.id)}
-                          className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                          className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-red-600 dark:text-red-400"
                           title="حذف"
                         >
                           <Trash2 size={16} />
@@ -267,27 +250,27 @@ export function AdminSectionsPage() {
           className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
           onClick={(e) => { if (e.target === e.currentTarget) handleCloseModal(); }}
         >
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md theme-transition">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-border rounded-t-2xl">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl">
               <div>
-                <h2 className="text-lg font-semibold">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   {editingSection ? 'تعديل القسم' : 'إضافة قسم جديد'}
                 </h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">
                   {editingSection ? 'عدّل البيانات ثم اضغط حفظ' : 'يمكنك إضافة دروس للقسم بعد حفظه'}
                 </p>
               </div>
               <button
                 onClick={handleCloseModal}
-                className="p-2 hover:bg-muted rounded-lg transition-colors text-muted-foreground"
+                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors text-gray-400 dark:text-slate-400"
               >
                 <X size={18} />
               </button>
             </div>
 
             {serverError && (
-              <div className="mx-6 mt-5 px-4 py-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
+              <div className="mx-6 mt-5 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-red-700 dark:text-red-400 text-sm rounded-lg">
                 {serverError}
               </div>
             )}
@@ -295,85 +278,70 @@ export function AdminSectionsPage() {
             <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
               {/* Course */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">
+                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-slate-200">
                   الدورة <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={formData.courseId}
-                  onChange={(e) => {
-                    setFormData({ ...formData, courseId: e.target.value, orderIndex: '' });
-                    if (formErrors.courseId) setFormErrors({ ...formErrors, courseId: undefined });
-                  }}
-                  className={`w-full px-4 py-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                    formErrors.courseId ? 'border-red-400 bg-red-50' : 'border-border'
-                  }`}
+                  onChange={(e) => { setFormData({ ...formData, courseId: e.target.value, orderIndex: '' }); if (formErrors.courseId) setFormErrors({ ...formErrors, courseId: undefined }); }}
+                  className={formErrors.courseId ? inputError : inputNormal}
                 >
                   <option value="">— اختر الدورة —</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>{c.title}</option>
                   ))}
                 </select>
-                {formErrors.courseId && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.courseId}</p>
-                )}
+                {formErrors.courseId && <p className="text-red-500 text-xs mt-1">{formErrors.courseId}</p>}
               </div>
 
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">
+                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-slate-200">
                   عنوان القسم <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => {
-                    setFormData({ ...formData, title: e.target.value });
-                    if (formErrors.title) setFormErrors({ ...formErrors, title: undefined });
-                  }}
+                  onChange={(e) => { setFormData({ ...formData, title: e.target.value }); if (formErrors.title) setFormErrors({ ...formErrors, title: undefined }); }}
                   placeholder="مثال: الفصل الأول — المقدمة"
-                  className={`w-full px-4 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                    formErrors.title ? 'border-red-400 bg-red-50' : 'border-border'
-                  }`}
+                  className={formErrors.title ? inputError : inputNormal}
                 />
-                {formErrors.title && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>
-                )}
+                {formErrors.title && <p className="text-red-500 text-xs mt-1">{formErrors.title}</p>}
               </div>
 
               {/* Sort order */}
               <div>
-                <label className="block text-sm font-medium mb-1.5">
+                <label className="block text-sm font-medium mb-1.5 text-gray-700 dark:text-slate-200">
                   الترتيب
                   {formData.courseId && !editingSection && (
-                    <span className="text-xs text-muted-foreground mr-1">
+                    <span className="text-xs text-gray-400 dark:text-slate-500 mr-1">
                       (مقترح: {suggestedOrder})
                     </span>
                   )}
                 </label>
                 <input
-                  type="number"
-                  min="1"
+                  type="number" min="1"
                   value={formData.orderIndex}
                   onChange={(e) => setFormData({ ...formData, orderIndex: e.target.value })}
                   placeholder={String(suggestedOrder)}
-                  className="w-full px-4 py-2.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  className={inputNormal}
                 />
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 justify-end pt-2 border-t border-border">
+              <div className="flex gap-3 justify-end pt-2 border-t border-gray-200 dark:border-slate-700">
                 <button
                   type="button"
                   onClick={handleCloseModal}
                   disabled={submitting}
-                  className="px-5 py-2.5 border border-border rounded-lg text-sm hover:bg-muted transition-colors disabled:opacity-50"
+                  className="px-5 py-2.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm hover:bg-gray-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors disabled:opacity-50"
                 >
                   إلغاء
                 </button>
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-60 inline-flex items-center gap-2"
+                  className="px-6 py-2.5 bg-[#3B2F82] dark:bg-[#8478C9] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60 inline-flex items-center gap-2"
                 >
                   {submitting ? (
                     <><Loader2 size={15} className="animate-spin" /><span>جاري الحفظ...</span></>

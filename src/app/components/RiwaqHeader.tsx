@@ -2,6 +2,7 @@ import { Menu, X, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { ThemeToggle } from './ThemeToggle';
 
 interface RiwaqHeaderProps {
   currentPage?: string;
@@ -26,7 +27,7 @@ export function RiwaqHeader({ currentPage = 'home' }: RiwaqHeaderProps) {
   };
 
   return (
-    <header className="bg-white border-b border-border sticky top-0 z-50 shadow-sm">
+    <header className="bg-white dark:bg-[#0f172a] border-b border-border dark:border-gray-800 sticky top-0 z-50 shadow-sm dark:shadow-gray-900/50 theme-transition">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* give the row enough height so the logo can actually grow */}
         <div className="flex items-center justify-between py-3 sm:py-4 min-h-[96px] sm:min-h-[112px] md:min-h-[128px]">
@@ -75,7 +76,7 @@ export function RiwaqHeader({ currentPage = 'home' }: RiwaqHeaderProps) {
           </nav>
 
           {/* CTA Button - Desktop */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
                 {/* Admin / Instructor panel shortcut — role-gated */}
@@ -121,6 +122,9 @@ export function RiwaqHeader({ currentPage = 'home' }: RiwaqHeaderProps) {
             )}
           </div>
 
+          {/* Theme Toggle — always visible */}
+          <ThemeToggle />
+
           {/* Mobile Menu Button */}
           <button
             className="md:hidden p-2 text-foreground"
@@ -133,7 +137,7 @@ export function RiwaqHeader({ currentPage = 'home' }: RiwaqHeaderProps) {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border bg-white">
+        <div className="md:hidden border-t border-border dark:border-gray-800 bg-white dark:bg-[#0f172a] theme-transition">
           <nav className="px-4 py-4 flex flex-col gap-4">
             {navItems.map((item) =>
               item.to ? (

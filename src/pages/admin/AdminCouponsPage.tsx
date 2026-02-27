@@ -14,19 +14,19 @@ export function AdminCouponsPage() {
     <AdminLayout>
       <div className="p-8">
         <div className="flex items-center gap-3 mb-8">
-          <div className="bg-primary/10 rounded-full p-3">
-            <Tag className="w-6 h-6 text-primary" />
+          <div className="bg-[#3B2F82]/10 dark:bg-[#8478C9]/20 rounded-full p-3">
+            <Tag className="w-6 h-6 text-[#3B2F82] dark:text-[#8478C9]" />
           </div>
           <div>
-            <h1 className="text-3xl">إدارة الكوبونات</h1>
-            <p className="text-muted-foreground">قريباً...</p>
+            <h1 className="text-3xl text-gray-900 dark:text-white">إدارة الكوبونات</h1>
+            <p className="text-gray-500 dark:text-slate-400">قريباً...</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-border p-12 text-center">
-          <Tag className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl mb-2">قيد التطوير</h2>
-          <p className="text-muted-foreground">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-12 text-center theme-transition">
+          <Tag className="w-16 h-16 text-gray-300 dark:text-slate-600 mx-auto mb-4 opacity-50" />
+          <h2 className="text-xl mb-2 text-gray-900 dark:text-white">قيد التطوير</h2>
+          <p className="text-gray-500 dark:text-slate-400">
             سيتم إضافة نظام الكوبونات قريباً
           </p>
         </div>

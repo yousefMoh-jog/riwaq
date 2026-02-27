@@ -74,7 +74,7 @@ export function CourseCard({
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group">
+    <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden hover:shadow-lg dark:hover:shadow-slate-900/60 transition-all duration-300 theme-transition group">
       {/* Thumbnail */}
       <div className="relative overflow-hidden aspect-video">
         <ImageWithFallback
@@ -85,8 +85,8 @@ export function CourseCard({
 
         {/* Play overlay on hover */}
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-            <Play size={28} className="text-accent-foreground mr-1" />
+          <div className="w-16 h-16 bg-[#F3BD32] rounded-full flex items-center justify-center">
+            <Play size={28} className="text-[#1a1a1a] mr-1" />
           </div>
         </div>
 
@@ -116,27 +116,27 @@ export function CourseCard({
       <div className="p-6">
         <div className="flex items-start gap-2 mb-2">
           <div className="flex-1">
-            <h3 className="text-xl mb-1">{title}</h3>
+            <h3 className="text-xl mb-1 text-gray-900 dark:text-white">{title}</h3>
             {category_name && (
-              <p className="text-xs text-primary mb-2">{category_name}</p>
+              <p className="text-xs text-[#3B2F82] dark:text-[#8478C9] mb-2">{category_name}</p>
             )}
           </div>
           {educational_level && (
-            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full whitespace-nowrap">
+            <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded-full whitespace-nowrap">
               {educationalLevelLabel(educational_level)}
             </span>
           )}
         </div>
 
-        <p className="text-muted-foreground mb-4 line-clamp-2">{description}</p>
+        <p className="text-gray-500 dark:text-slate-400 mb-4 line-clamp-2 text-sm">{description}</p>
 
         <div className="flex items-center justify-between">
           {price !== '' && price !== undefined && (
-            <span className="text-2xl text-primary">{price} د.ل</span>
+            <span className="text-2xl font-bold text-[#3B2F82] dark:text-[#8478C9]">{price} د.ل</span>
           )}
           <Link
             to={`/course/${id}`}
-            className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors ml-auto"
+            className="bg-[#3B2F82] dark:bg-[#8478C9] text-white px-5 py-2 rounded-lg hover:opacity-90 transition-opacity ml-auto text-sm"
           >
             عرض التفاصيل
           </Link>

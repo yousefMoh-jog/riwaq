@@ -6,8 +6,8 @@ import { educationalLevelLabel } from '../lib/utils';
 import { RiwaqHeader } from '../app/components/RiwaqHeader';
 import { RiwaqFooter } from '../app/components/RiwaqFooter';
 import {
-  BookOpen, CheckCircle, Lock, ChevronDown, ChevronUp,
-  Users, PlayCircle, ArrowLeft, Star, MessageSquare, Send,
+  BookOpen, CheckCircle, Lock, ChevronDown,
+  Users, PlayCircle, ArrowLeft, Star, MessageSquare, Send, Paperclip,
 } from 'lucide-react';
 
 interface Section {
@@ -88,6 +88,14 @@ interface Progress {
   percentage: number;
 }
 
+interface SectionLesson {
+  id: string;
+  title: string;
+  duration: number;
+  order_index: number;
+  attachment_url: string | null;
+}
+
 export function CourseDetailsPage() {
   const { id: courseId } = useParams<{ id: string }>();
   const { isAuthenticated, user } = useAuth();
@@ -96,6 +104,7 @@ export function CourseDetailsPage() {
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [sectionLessons, setSectionLessons] = useState<Record<string, SectionLesson[]>>({});
 
   // Ratings state
   const [ratingsData, setRatingsData] = useState<RatingsData | null>(null);
@@ -159,11 +168,20 @@ export function CourseDetailsPage() {
   };
 
   const toggleSection = (id: string) => {
+    const isOpening = !expandedSections.has(id);
     setExpandedSections((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+    // Fetch real lesson data the first time an enrolled user opens a section
+    if (isOpening && enrolled && !sectionLessons[id]) {
+      api.get(`/sections/${id}/lessons`)
+        .then(({ data }) => {
+          setSectionLessons((prev) => ({ ...prev, [id]: data.lessons ?? [] }));
+        })
+        .catch(() => { /* non-fatal */ });
+    }
   };
 
   // ── Loading / Error states ───────────────────────────────────────────────
@@ -418,25 +436,52 @@ export function CourseDetailsPage() {
                           {/* Section content */}
                           {isOpen && (
                             <div className="bg-muted/20 border-t border-border">
-                              {Array.from({ length: section.lessonsCount }).map((_, lessonIdx) => (
-                                <div
-                                  key={lessonIdx}
-                                  className="flex items-center gap-3 px-6 py-3 border-b border-border/50 last:border-b-0"
-                                >
-                                  <div className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center flex-shrink-0">
-                                    {enrolled ? (
+                              {enrolled && sectionLessons[section.id] ? (
+                                /* Real lesson data — enrolled users */
+                                sectionLessons[section.id].map((lesson, lessonIdx) => (
+                                  <div
+                                    key={lesson.id}
+                                    className="flex items-center gap-3 px-6 py-3 border-b border-border/50 last:border-b-0"
+                                  >
+                                    <div className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center flex-shrink-0">
                                       <PlayCircle size={14} className="text-primary" />
-                                    ) : (
-                                      <Lock size={12} className="text-muted-foreground" />
+                                    </div>
+                                    <span className="text-sm flex-1 text-foreground">
+                                      {lesson.title || `الدرس ${lessonIdx + 1}`}
+                                    </span>
+                                    {lesson.attachment_url && (
+                                      <span
+                                        title="يحتوي على مرفق"
+                                        className="flex items-center gap-1 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full flex-shrink-0"
+                                      >
+                                        <Paperclip size={11} />
+                                        مرفق
+                                      </span>
                                     )}
                                   </div>
-                                  <span className="text-sm text-muted-foreground">
-                                    {enrolled
-                                      ? `الدرس ${lessonIdx + 1}`
-                                      : `الدرس ${lessonIdx + 1} — محتوى مقفل`}
-                                  </span>
-                                </div>
-                              ))}
+                                ))
+                              ) : (
+                                /* Placeholder — non-enrolled or lessons still loading */
+                                Array.from({ length: section.lessonsCount }).map((_, lessonIdx) => (
+                                  <div
+                                    key={lessonIdx}
+                                    className="flex items-center gap-3 px-6 py-3 border-b border-border/50 last:border-b-0"
+                                  >
+                                    <div className="w-7 h-7 rounded-full bg-white border border-border flex items-center justify-center flex-shrink-0">
+                                      {enrolled ? (
+                                        <PlayCircle size={14} className="text-primary" />
+                                      ) : (
+                                        <Lock size={12} className="text-muted-foreground" />
+                                      )}
+                                    </div>
+                                    <span className="text-sm text-muted-foreground">
+                                      {enrolled
+                                        ? `الدرس ${lessonIdx + 1}`
+                                        : `الدرس ${lessonIdx + 1} — محتوى مقفل`}
+                                    </span>
+                                  </div>
+                                ))
+                              )}
                             </div>
                           )}
                         </div>

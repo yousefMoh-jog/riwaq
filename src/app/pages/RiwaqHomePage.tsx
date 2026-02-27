@@ -36,73 +36,86 @@ export function RiwaqHomePage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-slate-950 theme-transition">
       <RiwaqHeader currentPage="home" />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-primary via-primary to-secondary text-primary-foreground py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        {/* ── Hero ─────────────────────────────────────────────────────────── */}
+        <section className="relative overflow-hidden py-16 md:py-24
+          bg-gradient-to-br from-[#2d2468] via-[#3B2F82] to-[#6467AD]
+          dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#1a1640] dark:to-[#2d2468]
+          text-white">
+
+          {/* Decorative blobs — subtle in both modes */}
+          <div className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-white/5" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-white/5" />
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+              {/* Left copy */}
               <div className="flex flex-col gap-6 text-center lg:text-right">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl leading-tight">
-                  ابدأ رحلتك التعليمية مع <span className="text-accent">رِواق</span>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl leading-tight font-bold text-white">
+                  ابدأ رحلتك التعليمية مع{' '}
+                  <span className="text-[#F3BD32]">رِواق</span>
                 </h1>
-                <p className="text-lg md:text-xl text-primary-foreground/90 leading-relaxed">
+                <p className="text-lg md:text-xl text-white/80 leading-relaxed">
                   منصة تعليمية عربية متخصصة في تقديم دورات فيديو عالية الجودة لتطوير مهاراتك المهنية والشخصية
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <Link
                     to="/courses"
-                    className="bg-accent text-accent-foreground px-8 py-3 rounded-lg hover:bg-accent/90 transition-colors inline-flex items-center justify-center gap-2"
+                    className="bg-[#F3BD32] text-[#1a1a1a] px-8 py-3 rounded-lg hover:bg-[#e0ab2a] transition-colors inline-flex items-center justify-center gap-2 font-medium"
                   >
                     <span>استكشف الدورات</span>
                     <Play size={20} />
                   </Link>
                   <a
                     href="#about"
-                    className="bg-white/10 text-primary-foreground px-8 py-3 rounded-lg hover:bg-white/20 transition-colors inline-flex items-center justify-center backdrop-blur-sm"
+                    className="bg-white/10 text-white border border-white/20 px-8 py-3 rounded-lg hover:bg-white/20 transition-colors inline-flex items-center justify-center backdrop-blur-sm"
                   >
-                    {/* In-page scroll anchor – intentionally kept as <a> */}
                     تعرف على رِواق
                   </a>
                 </div>
               </div>
+
+              {/* Right stats panel */}
               <div className="hidden lg:block">
                 <div className="relative">
-                  <div className="absolute inset-0 bg-accent/20 rounded-2xl transform rotate-3"></div>
-                  <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                  <div className="absolute inset-0 bg-[#F3BD32]/10 rounded-2xl transform rotate-3" />
+                  <div className="relative bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20
+                    dark:bg-slate-900/60 dark:border-slate-700/50">
                     <div className="grid grid-cols-2 gap-6">
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">
-                        <div className="text-4xl mb-2 text-accent">500+</div>
-                        <div className="text-sm text-primary-foreground/80">دورة تعليمية</div>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">
-                        <div className="text-4xl mb-2 text-accent">50K+</div>
-                        <div className="text-sm text-primary-foreground/80">طالب مسجل</div>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">
-                        <div className="text-4xl mb-2 text-accent">200+</div>
-                        <div className="text-sm text-primary-foreground/80">مدرب محترف</div>
-                      </div>
-                      <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center">
-                        <div className="text-4xl mb-2 text-accent">4.8</div>
-                        <div className="text-sm text-primary-foreground/80">تقييم الطلاب</div>
-                      </div>
+                      {[
+                        { num: '500+', label: 'دورة تعليمية' },
+                        { num: '50K+', label: 'طالب مسجل' },
+                        { num: '200+', label: 'مدرب محترف' },
+                        { num: '4.8',  label: 'تقييم الطلاب' },
+                      ].map((stat) => (
+                        <div key={stat.label}
+                          className="bg-white/10 dark:bg-slate-800/60 backdrop-blur-sm rounded-lg p-6 text-center">
+                          <div className="text-4xl mb-2 text-[#F3BD32] font-bold">{stat.num}</div>
+                          <div className="text-sm text-white/80">{stat.label}</div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
               </div>
+
             </div>
           </div>
         </section>
 
-        {/* Featured Courses */}
-        <section id="courses" className="py-16 bg-background">
+        {/* ── Featured Courses ──────────────────────────────────────────────── */}
+        <section id="courses" className="py-16 bg-white dark:bg-slate-950 theme-transition">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl mb-4">الدورات المميزة</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl mb-4 text-gray-900 dark:text-white">
+                الدورات المميزة
+              </h2>
+              <p className="text-gray-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
                 اختر من بين مجموعة واسعة من الدورات التعليمية المتخصصة
               </p>
             </div>
@@ -111,8 +124,11 @@ export function RiwaqHomePage() {
               {featuredCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="bg-card border border-border rounded-lg overflow-hidden hover:shadow-lg transition-shadow group"
+                  className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700
+                    rounded-xl overflow-hidden hover:shadow-lg dark:hover:shadow-slate-900/60
+                    transition-all duration-300 theme-transition group"
                 >
+                  {/* Thumbnail */}
                   <div className="relative overflow-hidden aspect-video">
                     <ImageWithFallback
                       src={course.thumbnail}
@@ -120,28 +136,35 @@ export function RiwaqHomePage() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center">
-                        <Play size={28} className="text-accent-foreground mr-1" />
+                      <div className="w-16 h-16 bg-[#F3BD32] rounded-full flex items-center justify-center">
+                        <Play size={28} className="text-[#1a1a1a] mr-1" />
                       </div>
                     </div>
                   </div>
+
+                  {/* Body */}
                   <div className="p-6">
-                    <h3 className="text-xl mb-2">{course.title}</h3>
-                    <p className="text-muted-foreground mb-4 line-clamp-2">
+                    <h3 className="text-xl mb-2 text-gray-900 dark:text-white font-medium">
+                      {course.title}
+                    </h3>
+                    <p className="text-gray-500 dark:text-slate-400 mb-4 line-clamp-2 text-sm">
                       {course.description}
                     </p>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center justify-between text-sm text-gray-400 dark:text-slate-500 mb-4">
                       <span className="flex items-center gap-1">
-                        <BookOpen size={16} />
+                        <BookOpen size={15} />
                         {course.lessons} درس
                       </span>
                       <span>{course.duration}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl text-primary">{course.price}</span>
+                      <span className="text-2xl font-bold text-[#3B2F82] dark:text-[#8478C9]">
+                        {course.price}
+                      </span>
                       <a
                         href={`#course-${course.id}`}
-                        className="bg-primary text-primary-foreground px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                        className="bg-[#3B2F82] dark:bg-[#8478C9] text-white px-5 py-2 rounded-lg
+                          hover:opacity-90 transition-opacity text-sm"
                       >
                         عرض التفاصيل
                       </a>
@@ -154,7 +177,11 @@ export function RiwaqHomePage() {
             <div className="text-center mt-12">
               <Link
                 to="/courses"
-                className="inline-flex items-center justify-center bg-secondary text-secondary-foreground px-8 py-3 rounded-lg hover:bg-secondary/90 transition-colors"
+                className="inline-flex items-center justify-center
+                  bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200
+                  border border-gray-200 dark:border-slate-700
+                  px-8 py-3 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700
+                  transition-colors theme-transition"
               >
                 عرض جميع الدورات
               </Link>
@@ -162,43 +189,60 @@ export function RiwaqHomePage() {
           </div>
         </section>
 
-        {/* Platform Vision */}
-        <section className="py-16 bg-muted/30">
+        {/* ── Why Riwaq ─────────────────────────────────────────────────────── */}
+        <section id="about" className="py-16 bg-gray-50 dark:bg-slate-900 theme-transition">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl mb-4">لماذا رِواق؟</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              <h2 className="text-3xl md:text-4xl mb-4 text-gray-900 dark:text-white">
+                لماذا رِواق؟
+              </h2>
+              <p className="text-gray-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">
                 نوفر لك تجربة تعليمية متميزة ومتكاملة
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="bg-card border border-border rounded-lg p-8 text-center hover:shadow-lg transition-shadow">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <BookOpen size={32} className="text-primary" />
+              {/* Card 1 */}
+              <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700
+                rounded-xl p-8 text-center hover:shadow-lg dark:hover:shadow-slate-900/60
+                transition-all duration-300 theme-transition">
+                <div className="w-16 h-16 bg-[#3B2F82]/10 dark:bg-[#8478C9]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <BookOpen size={32} className="text-[#3B2F82] dark:text-[#8478C9]" />
                 </div>
-                <h3 className="text-xl mb-3">محتوى عالي الجودة</h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <h3 className="text-xl mb-3 text-gray-900 dark:text-white font-medium">
+                  محتوى عالي الجودة
+                </h3>
+                <p className="text-gray-500 dark:text-slate-400 leading-relaxed">
                   دورات مصممة بعناية من قبل خبراء متخصصين في مجالاتهم
                 </p>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-8 text-center hover:shadow-lg transition-shadow">
-                <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award size={32} className="text-accent" />
+              {/* Card 2 */}
+              <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700
+                rounded-xl p-8 text-center hover:shadow-lg dark:hover:shadow-slate-900/60
+                transition-all duration-300 theme-transition">
+                <div className="w-16 h-16 bg-[#F3BD32]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Award size={32} className="text-[#F3BD32]" />
                 </div>
-                <h3 className="text-xl mb-3">شهادات معتمدة</h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <h3 className="text-xl mb-3 text-gray-900 dark:text-white font-medium">
+                  شهادات معتمدة
+                </h3>
+                <p className="text-gray-500 dark:text-slate-400 leading-relaxed">
                   احصل على شهادة إتمام معتمدة بعد إنهاء كل دورة تدريبية
                 </p>
               </div>
 
-              <div className="bg-card border border-border rounded-lg p-8 text-center hover:shadow-lg transition-shadow">
-                <div className="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users size={32} className="text-secondary" />
+              {/* Card 3 */}
+              <div className="bg-white dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700
+                rounded-xl p-8 text-center hover:shadow-lg dark:hover:shadow-slate-900/60
+                transition-all duration-300 theme-transition">
+                <div className="w-16 h-16 bg-[#6467AD]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users size={32} className="text-[#6467AD]" />
                 </div>
-                <h3 className="text-xl mb-3">مجتمع تعليمي</h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <h3 className="text-xl mb-3 text-gray-900 dark:text-white font-medium">
+                  مجتمع تعليمي
+                </h3>
+                <p className="text-gray-500 dark:text-slate-400 leading-relaxed">
                   انضم إلى مجتمع من المتعلمين والخبراء لتبادل الخبرات
                 </p>
               </div>
@@ -206,21 +250,33 @@ export function RiwaqHomePage() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-16 bg-gradient-to-br from-primary to-secondary text-primary-foreground">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl md:text-4xl mb-4">ابدأ رحلتك التعليمية اليوم</h2>
-            <p className="text-lg text-primary-foreground/90 mb-8 leading-relaxed">
+        {/* ── CTA ───────────────────────────────────────────────────────────── */}
+        <section className="py-16 relative overflow-hidden
+          bg-gradient-to-br from-[#2d2468] via-[#3B2F82] to-[#6467AD]
+          dark:bg-gradient-to-br dark:from-slate-950 dark:via-[#1a1640] dark:to-[#2d2468]
+          text-white">
+
+          <div className="pointer-events-none absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/5" />
+          <div className="pointer-events-none absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-white/5" />
+
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+            <h2 className="text-3xl md:text-4xl mb-4 text-white font-bold">
+              ابدأ رحلتك التعليمية اليوم
+            </h2>
+            <p className="text-lg text-white/80 mb-8 leading-relaxed">
               انضم إلى آلاف المتعلمين واحصل على وصول فوري لجميع الدورات التعليمية
             </p>
             <Link
               to="/register"
-              className="inline-flex items-center justify-center bg-accent text-accent-foreground px-10 py-4 rounded-lg hover:bg-accent/90 transition-colors text-lg"
+              className="inline-flex items-center justify-center
+                bg-[#F3BD32] text-[#1a1a1a] font-medium
+                px-10 py-4 rounded-lg hover:bg-[#e0ab2a] transition-colors text-lg"
             >
               سجل الآن مجاناً
             </Link>
           </div>
         </section>
+
       </main>
 
       <RiwaqFooter />

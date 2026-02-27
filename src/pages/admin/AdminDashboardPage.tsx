@@ -47,7 +47,6 @@ export function AdminDashboardPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Instructors don't see this page — redirect them immediately
     if (user?.role === 'INSTRUCTOR') return;
     if (user?.role !== 'ADMIN') return;
 
@@ -66,7 +65,6 @@ export function AdminDashboardPage() {
     fetchStats();
   }, [user]);
 
-  // Instructors jump straight to the courses panel
   if (user?.role === 'INSTRUCTOR') {
     return <Navigate to="/admin/courses" replace />;
   }
@@ -81,25 +79,25 @@ export function AdminDashboardPage() {
       label: 'إجمالي المستخدمين',
       value: stats?.totalUsers?.toLocaleString('ar-EG') ?? '—',
       icon: Users,
-      iconColor: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-100',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      border: 'border-blue-100 dark:border-blue-900/30',
     },
     {
       label: 'إجمالي الدورات',
       value: stats?.totalCourses?.toLocaleString('ar-EG') ?? '—',
       icon: BookOpen,
-      iconColor: 'text-green-600',
-      bg: 'bg-green-50',
-      border: 'border-green-100',
+      iconColor: 'text-green-600 dark:text-green-400',
+      bg: 'bg-green-50 dark:bg-green-900/20',
+      border: 'border-green-100 dark:border-green-900/30',
     },
     {
       label: 'الطلاب المسجّلون',
       value: stats?.totalStudents?.toLocaleString('ar-EG') ?? '—',
       icon: GraduationCap,
-      iconColor: 'text-purple-600',
-      bg: 'bg-purple-50',
-      border: 'border-purple-100',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+      bg: 'bg-purple-50 dark:bg-purple-900/20',
+      border: 'border-purple-100 dark:border-purple-900/30',
     },
     {
       label: 'إجمالي الإيرادات',
@@ -107,9 +105,9 @@ export function AdminDashboardPage() {
         ? `${Number(stats.totalRevenue).toLocaleString('ar-EG')} د.ل`
         : '—',
       icon: DollarSign,
-      iconColor: 'text-orange-600',
-      bg: 'bg-orange-50',
-      border: 'border-orange-100',
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      bg: 'bg-orange-50 dark:bg-orange-900/20',
+      border: 'border-orange-100 dark:border-orange-900/30',
     },
   ];
 
@@ -118,25 +116,25 @@ export function AdminDashboardPage() {
       <div className="p-8">
         {/* ── Page header ─────────────────────────────────────────────── */}
         <div className="mb-8">
-          <h1 className="text-3xl mb-1">لوحة التحكم</h1>
-          <p className="text-muted-foreground">نظرة عامة على إحصائيات المنصة</p>
+          <h1 className="text-3xl mb-1 text-gray-900 dark:text-white">لوحة التحكم</h1>
+          <p className="text-gray-500 dark:text-slate-400">نظرة عامة على إحصائيات المنصة</p>
         </div>
 
         {/* ── Loading / error states ────────────────────────────────── */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-xl border border-border p-6 animate-pulse">
-                <div className="h-10 w-10 rounded-lg bg-muted mb-4" />
-                <div className="h-7 w-24 bg-muted rounded mb-2" />
-                <div className="h-4 w-32 bg-muted rounded" />
+              <div key={i} className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 p-6 animate-pulse theme-transition">
+                <div className="h-10 w-10 rounded-lg bg-gray-100 dark:bg-slate-700 mb-4" />
+                <div className="h-7 w-24 bg-gray-100 dark:bg-slate-700 rounded mb-2" />
+                <div className="h-4 w-32 bg-gray-100 dark:bg-slate-700 rounded" />
               </div>
             ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-6 mb-8">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 text-red-700 dark:text-red-400 rounded-lg p-6 mb-8">
             <p className="font-medium">تعذّر تحميل الإحصائيات</p>
-            <p className="text-sm mt-1 text-red-600">{error}</p>
+            <p className="text-sm mt-1 text-red-600 dark:text-red-400">{error}</p>
           </div>
         ) : (
           <>
@@ -147,7 +145,7 @@ export function AdminDashboardPage() {
                 return (
                   <div
                     key={i}
-                    className={`bg-white rounded-xl border ${card.border} shadow-sm p-6 hover:shadow-md transition-shadow`}
+                    className={`bg-white dark:bg-slate-800 rounded-xl border ${card.border} shadow-sm p-6 hover:shadow-md transition-shadow theme-transition`}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <div className={`${card.bg} p-3 rounded-lg`}>
@@ -155,23 +153,23 @@ export function AdminDashboardPage() {
                       </div>
                       <TrendingUp className="w-4 h-4 text-green-500 opacity-70" />
                     </div>
-                    <div className="text-2xl font-bold mb-1 tabular-nums">{card.value}</div>
-                    <div className="text-sm text-muted-foreground">{card.label}</div>
+                    <div className="text-2xl font-bold mb-1 tabular-nums text-gray-900 dark:text-white">{card.value}</div>
+                    <div className="text-sm text-gray-500 dark:text-slate-400">{card.label}</div>
                   </div>
                 );
               })}
             </div>
 
             {/* ── Recent Sales ────────────────────────────────────────── */}
-            <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden mb-8">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm overflow-hidden mb-8 theme-transition">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
                 <div className="flex items-center gap-2">
-                  <ShoppingCart className="w-5 h-5 text-primary" />
-                  <h2 className="text-lg font-semibold">آخر المبيعات</h2>
+                  <ShoppingCart className="w-5 h-5 text-[#3B2F82] dark:text-[#8478C9]" />
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">آخر المبيعات</h2>
                 </div>
                 <Link
                   to="/admin/orders"
-                  className="flex items-center gap-1 text-sm text-primary hover:underline"
+                  className="flex items-center gap-1 text-sm text-[#3B2F82] dark:text-[#8478C9] hover:underline"
                 >
                   <span>عرض الكل</span>
                   <ArrowLeft size={14} />
@@ -179,14 +177,14 @@ export function AdminDashboardPage() {
               </div>
 
               {!stats?.recentSales?.length ? (
-                <div className="py-12 text-center text-muted-foreground">
+                <div className="py-12 text-center text-gray-400 dark:text-slate-500">
                   <ShoppingCart className="w-10 h-10 mx-auto mb-3 opacity-25" />
                   <p>لا توجد مبيعات بعد</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead className="bg-muted/40 text-muted-foreground">
+                    <thead className="bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400">
                       <tr>
                         <th className="px-6 py-3 text-right font-medium">
                           <div className="flex items-center gap-1.5 justify-end">
@@ -214,23 +212,23 @@ export function AdminDashboardPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-border">
+                    <tbody className="divide-y divide-gray-100 dark:divide-slate-700">
                       {stats.recentSales.map((sale) => (
-                        <tr key={sale.id} className="hover:bg-muted/20 transition-colors">
+                        <tr key={sale.id} className="hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
                           <td className="px-6 py-4">
-                            <div className="font-medium">{sale.student_name || 'غير محدد'}</div>
-                            <div className="text-xs text-muted-foreground">{sale.student_email || '—'}</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{sale.student_name || 'غير محدد'}</div>
+                            <div className="text-xs text-gray-400 dark:text-slate-500">{sale.student_email || '—'}</div>
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground">
+                          <td className="px-6 py-4 text-gray-500 dark:text-slate-400">
                             {sale.course_title || 'غير محدد'}
                           </td>
                           <td className="px-6 py-4">
-                            <span className="inline-flex items-center gap-1 font-semibold text-green-700">
+                            <span className="inline-flex items-center gap-1 font-semibold text-green-700 dark:text-green-400">
                               {Number(sale.price || 0).toLocaleString('ar-EG')}
-                              <span className="text-xs font-normal text-muted-foreground">د.ل</span>
+                              <span className="text-xs font-normal text-gray-400 dark:text-slate-500">د.ل</span>
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-muted-foreground">
+                          <td className="px-6 py-4 text-gray-500 dark:text-slate-400">
                             {new Date(sale.purchase_date).toLocaleDateString('ar-EG', {
                               year: 'numeric',
                               month: 'short',
@@ -271,7 +269,6 @@ function WelcomeBanner({
     day: 'numeric',
   });
 
-  // Greeting changes by hour
   const hour = now.getHours();
   const greeting =
     hour < 12 ? 'صباح الخير' :
@@ -279,7 +276,7 @@ function WelcomeBanner({
                 'مساء النور';
 
   return (
-    <div className="bg-gradient-to-r from-primary to-secondary rounded-xl shadow-lg p-6 sm:p-8 text-white">
+    <div className="bg-gradient-to-r from-[#2d2468] via-[#3B2F82] to-[#6467AD] rounded-xl shadow-lg p-6 sm:p-8 text-white">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
 
         {/* Left: greeting */}

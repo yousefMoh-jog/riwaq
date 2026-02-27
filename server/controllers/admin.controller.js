@@ -971,3 +971,204 @@ export async function updateOrder(req, res) {
       .json({ ok: false, messageAr: "حدث خطأ في السيرفر" });
   }
 }
+
+// ── Activity Log ──────────────────────────────────────────────────────────────
+export async function getActivityLog(req, res) {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = 50;
+    const offset = (page - 1) * limit;
+    const type = req.query.type || 'all';
+
+    const allowedTypes = ['enrollment', 'completion', 'rating', 'registration'];
+    const filterClause = allowedTypes.includes(type)
+      ? `WHERE event_type = '${type}'`
+      : '';
+
+    const eventsQuery = `
+      SELECT * FROM (
+        SELECT 'enrollment'    AS event_type,
+               u.full_name    AS user_name,
+               u.email        AS user_email,
+               c.title_ar     AS resource_title,
+               NULL::TEXT     AS extra,
+               e.enrolled_at  AS timestamp
+        FROM enrollments e
+        LEFT JOIN users   u ON u.id = e.user_id
+        LEFT JOIN courses c ON c.id = e.course_id
+
+        UNION ALL
+
+        SELECT 'completion'    AS event_type,
+               u.full_name,
+               u.email,
+               l.title_ar,
+               s.title_ar     AS extra,
+               lp.completed_at
+        FROM lesson_progress lp
+        LEFT JOIN users    u ON u.id = lp.user_id
+        LEFT JOIN lessons  l ON l.id = lp.lesson_id
+        LEFT JOIN sections s ON s.id = l.section_id
+
+        UNION ALL
+
+        SELECT 'rating'        AS event_type,
+               u.full_name,
+               u.email,
+               c.title_ar,
+               cr.rating::TEXT AS extra,
+               cr.created_at
+        FROM course_ratings cr
+        LEFT JOIN users   u ON u.id = cr.user_id
+        LEFT JOIN courses c ON c.id = cr.course_id
+
+        UNION ALL
+
+        SELECT 'registration'  AS event_type,
+               full_name,
+               email,
+               NULL::TEXT     AS resource_title,
+               role           AS extra,
+               created_at
+        FROM users
+      ) events
+      ${filterClause}
+      ORDER BY timestamp DESC
+      LIMIT $1 OFFSET $2
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) FROM (
+        SELECT enrolled_at  AS ts FROM enrollments
+        UNION ALL SELECT completed_at FROM lesson_progress
+        UNION ALL SELECT created_at   FROM course_ratings
+        UNION ALL SELECT created_at   FROM users
+      ) all_events
+    `;
+
+    const filteredCountQuery = allowedTypes.includes(type)
+      ? `SELECT COUNT(*) FROM (${eventsQuery.replace('LIMIT $1 OFFSET $2', '')}) counted`
+      : countQuery;
+
+    const [eventsResult, countResult] = await Promise.all([
+      pool.query(eventsQuery, [limit, offset]),
+      allowedTypes.includes(type)
+        ? pool.query(
+            `SELECT COUNT(*) FROM (
+              SELECT * FROM (
+                SELECT 'enrollment' AS event_type, e.enrolled_at AS timestamp
+                FROM enrollments e
+                UNION ALL
+                SELECT 'completion', lp.completed_at FROM lesson_progress lp
+                UNION ALL
+                SELECT 'rating', cr.created_at FROM course_ratings cr
+                UNION ALL
+                SELECT 'registration', created_at FROM users
+              ) t WHERE event_type = $1
+            ) counted`,
+            [type]
+          )
+        : pool.query(countQuery),
+    ]);
+
+    const total = parseInt(countResult.rows[0].count, 10);
+
+    return res.json({
+      events: eventsResult.rows,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    });
+  } catch (err) {
+    console.error('[getActivityLog]', err);
+    return res.status(500).json({ ok: false, messageAr: 'حدث خطأ في السيرفر' });
+  }
+}
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+export async function getAnalytics(req, res) {
+  try {
+    const [monthlyResult, topCoursesResult, completionResult, ratingDistResult, summaryResult] =
+      await Promise.all([
+        // A. Monthly revenue + enrollments — last 12 full months
+        pool.query(`
+          SELECT
+            TO_CHAR(DATE_TRUNC('month', e.enrolled_at), 'YYYY-MM') AS month,
+            COALESCE(SUM(c.price), 0)::NUMERIC                      AS revenue,
+            COUNT(e.id)::INTEGER                                     AS enrollments
+          FROM enrollments e
+          JOIN courses c ON c.id = e.course_id
+          WHERE e.enrolled_at >= DATE_TRUNC('month', NOW()) - INTERVAL '11 months'
+          GROUP BY DATE_TRUNC('month', e.enrolled_at)
+          ORDER BY month
+        `),
+
+        // B. Top 6 courses by enrollment count
+        pool.query(`
+          SELECT c.title_ar AS title, COUNT(e.id)::INTEGER AS count
+          FROM courses c
+          LEFT JOIN enrollments e ON e.course_id = c.id
+          GROUP BY c.id, c.title_ar
+          ORDER BY count DESC
+          LIMIT 6
+        `),
+
+        // C. Completion rates for top 8 enrolled courses
+        pool.query(`
+          WITH course_lessons AS (
+            SELECT s.course_id, COUNT(l.id) AS total
+            FROM lessons  l
+            JOIN sections s ON s.id = l.section_id
+            GROUP BY s.course_id
+          ),
+          user_done AS (
+            SELECT s.course_id, lp.user_id, COUNT(lp.id) AS done
+            FROM lesson_progress lp
+            JOIN lessons  l ON l.id = lp.lesson_id
+            JOIN sections s ON s.id = l.section_id
+            GROUP BY s.course_id, lp.user_id
+          )
+          SELECT
+            c.title_ar                                                          AS title,
+            COUNT(DISTINCT e.user_id)::INTEGER                                 AS enrolled,
+            COALESCE(SUM(CASE WHEN ud.done >= cl.total THEN 1 ELSE 0 END), 0)::INTEGER AS completed
+          FROM courses c
+          JOIN enrollments e ON e.course_id = c.id
+          LEFT JOIN course_lessons cl ON cl.course_id = c.id
+          LEFT JOIN user_done ud ON ud.course_id = c.id AND ud.user_id = e.user_id
+          GROUP BY c.id, c.title_ar
+          ORDER BY enrolled DESC
+          LIMIT 8
+        `),
+
+        // D. Star rating distribution
+        pool.query(`
+          SELECT rating::INTEGER AS rating, COUNT(*)::INTEGER AS count
+          FROM course_ratings
+          GROUP BY rating
+          ORDER BY rating
+        `),
+
+        // E. Summary cards
+        pool.query(`
+          SELECT
+            (SELECT COUNT(*)          FROM users)                                          AS total_users,
+            (SELECT COUNT(*)          FROM enrollments)                                    AS total_enrollments,
+            (SELECT COUNT(*)          FROM courses WHERE published = true)                 AS active_courses,
+            (SELECT COALESCE(AVG(rating), 0) FROM course_ratings)                         AS avg_rating,
+            (SELECT COALESCE(SUM(c.price), 0) FROM enrollments e JOIN courses c ON c.id = e.course_id) AS total_revenue
+        `),
+      ]);
+
+    return res.json({
+      monthly:         monthlyResult.rows,
+      topCourses:      topCoursesResult.rows,
+      completionRates: completionResult.rows,
+      ratingDist:      ratingDistResult.rows,
+      summary:         summaryResult.rows[0],
+    });
+  } catch (err) {
+    console.error('[getAnalytics]', err);
+    return res.status(500).json({ ok: false, messageAr: 'حدث خطأ في السيرفر' });
+  }
+}
