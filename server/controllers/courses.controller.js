@@ -262,6 +262,10 @@ export async function getLesson(req, res) {
       [userId, lessonId]
     );
 
+    // Increment view count (fire-and-forget — never blocks the response)
+    pool.query("UPDATE lessons SET view_count = view_count + 1 WHERE id = $1", [lessonId])
+      .catch((e) => console.error("[view_count] update error:", e.message));
+
     return res.json({
       id: lesson.id,
       title: lesson.title_ar ?? lesson.title ?? '',

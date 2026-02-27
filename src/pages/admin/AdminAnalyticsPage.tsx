@@ -5,10 +5,11 @@ import { api } from '../../lib/api';
 import { AdminLayout } from '../../layouts/AdminLayout';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer,
+  Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import {
   TrendingUp, Users, BookOpen, Star, DollarSign, Loader2, BarChart2,
+  Eye, Paperclip, Trophy,
 } from 'lucide-react';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -49,6 +50,24 @@ interface AnalyticsData {
   completionRates: CompletionRate[];
   ratingDist: RatingDist[];
   summary: Summary;
+}
+
+interface TopLesson {
+  id: string;
+  title: string;
+  view_count: number;
+  course_title: string;
+}
+
+interface LessonsAnalyticsSummary {
+  total_views: number;
+  total_attachments: number;
+  top_course: string | null;
+}
+
+interface LessonsAnalyticsData {
+  topLessons: TopLesson[];
+  summary: LessonsAnalyticsSummary;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -102,18 +121,48 @@ function EnrollTooltip({ active, payload, label }: {
   );
 }
 
+// ── Neon tooltip for lesson views chart ────────────────────────────────────────
+
+function ViewsTooltip({ active, payload }: {
+  active?: boolean;
+  payload?: { value: number; payload: TopLesson }[];
+}) {
+  if (!active || !payload?.length) return null;
+  const { value, payload: row } = payload[0];
+  return (
+    <div className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 shadow-xl text-sm max-w-[220px]">
+      <p className="font-semibold text-white truncate">{row.title}</p>
+      <p className="text-slate-400 text-xs truncate">{row.course_title}</p>
+      <p className="text-cyan-400 font-bold mt-1">{value.toLocaleString('ar-EG')} مشاهدة</p>
+    </div>
+  );
+}
+
+// Neon cyan gradient bars
+const NEON_COLORS = [
+  '#06b6d4', '#0ea5e9', '#6366f1', '#8b5cf6', '#10b981',
+  '#34d399', '#22d3ee', '#38bdf8', '#818cf8', '#a78bfa',
+];
+
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function AdminAnalyticsPage() {
   const { user } = useAuth();
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lessonsData, setLessonsData] = useState<LessonsAnalyticsData | null>(null);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
 
   useEffect(() => {
     api.get('/admin/analytics')
       .then((r) => setData(r.data))
       .catch(console.error)
       .finally(() => setLoading(false));
+
+    api.get('/admin/lessons-analytics')
+      .then((r) => setLessonsData(r.data))
+      .catch(console.error)
+      .finally(() => setLessonsLoading(false));
   }, []);
 
   if (user?.role !== 'ADMIN') return <Navigate to="/dashboard" replace />;
@@ -174,6 +223,125 @@ export function AdminAnalyticsPage() {
             <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">نظرة شاملة على أداء المنصة</p>
           </div>
         </div>
+
+        {/* ══════════════════════════════════════════════════════════════════
+            MOST VIEWED LESSONS SECTION
+        ══════════════════════════════════════════════════════════════════ */}
+
+        {/* Section header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-cyan-500/10 rounded-full p-3">
+            <Eye className="w-6 h-6 text-cyan-500" />
+          </div>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">أكثر الدروس مشاهدةً</h2>
+            <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">إحصائيات المشاهدات لكل درس</p>
+          </div>
+        </div>
+
+        {lessonsLoading ? (
+          <div className="flex items-center justify-center py-16 text-gray-400 dark:text-slate-500 gap-2 mb-8">
+            <Loader2 size={20} className="animate-spin" />
+            <span>جاري تحميل إحصائيات الدروس...</span>
+          </div>
+        ) : (
+          <div className="space-y-6 mb-10">
+
+            {/* ── 3 Stat Cards ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Total Views */}
+              <div className="bg-slate-900 dark:bg-slate-950 rounded-xl border border-cyan-500/20 p-5 flex items-center gap-4">
+                <div className="bg-cyan-500/10 rounded-full p-3 flex-shrink-0">
+                  <Eye className="w-5 h-5 text-cyan-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">إجمالي المشاهدات</p>
+                  <p className="text-2xl font-bold text-white mt-0.5">
+                    {Number(lessonsData?.summary.total_views ?? 0).toLocaleString('ar-EG')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Top Performing Course */}
+              <div className="bg-slate-900 dark:bg-slate-950 rounded-xl border border-emerald-500/20 p-5 flex items-center gap-4">
+                <div className="bg-emerald-500/10 rounded-full p-3 flex-shrink-0">
+                  <Trophy className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-400">أكثر دورة مشاهدةً</p>
+                  <p className="text-sm font-bold text-white mt-0.5 truncate">
+                    {lessonsData?.summary.top_course ?? '—'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Total Attachments */}
+              <div className="bg-slate-900 dark:bg-slate-950 rounded-xl border border-violet-500/20 p-5 flex items-center gap-4">
+                <div className="bg-violet-500/10 rounded-full p-3 flex-shrink-0">
+                  <Paperclip className="w-5 h-5 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-slate-400">دروس تحتوي مرفقات</p>
+                  <p className="text-2xl font-bold text-white mt-0.5">
+                    {Number(lessonsData?.summary.total_attachments ?? 0).toLocaleString('ar-EG')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* ── Top 10 Lessons Bar Chart ── */}
+            <div className="bg-slate-900 dark:bg-slate-950 rounded-xl border border-slate-700/50 p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <BarChart2 size={18} className="text-cyan-400" />
+                <h3 className="text-base font-semibold text-white">أعلى 10 دروس مشاهدةً</h3>
+              </div>
+
+              {(lessonsData?.topLessons.length ?? 0) === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+                  <Eye size={40} className="mb-3 opacity-30" />
+                  <p className="text-sm">لا توجد بيانات مشاهدة بعد — ستظهر عند بدء الطلاب في مشاهدة الدروس</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={320}>
+                  <BarChart
+                    data={lessonsData?.topLessons ?? []}
+                    layout="vertical"
+                    margin={{ top: 0, right: 20, left: 8, bottom: 0 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="title"
+                      width={140}
+                      tick={{ fontSize: 11, fill: '#94a3b8' }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 18) + '…' : v}
+                    />
+                    <Tooltip content={<ViewsTooltip />} cursor={{ fill: 'rgba(6,182,212,0.06)' }} />
+                    <Bar dataKey="view_count" radius={[0, 6, 6, 0]} maxBarSize={28}>
+                      {(lessonsData?.topLessons ?? []).map((_, i) => (
+                        <Cell key={i} fill={NEON_COLORS[i % NEON_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════
+            EXISTING COURSE ANALYTICS SECTION
+        ══════════════════════════════════════════════════════════════════ */}
 
         {loading ? (
           <div className="flex items-center justify-center py-32 text-gray-400 dark:text-slate-500 gap-2">

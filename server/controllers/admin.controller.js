@@ -1172,3 +1172,50 @@ export async function getAnalytics(req, res) {
     return res.status(500).json({ ok: false, messageAr: 'حدث خطأ في السيرفر' });
   }
 }
+
+// ── Lessons Analytics (Most Viewed) ───────────────────────────────────────────
+export async function getLessonsAnalytics(req, res) {
+  try {
+    const [topLessonsResult, summaryResult] = await Promise.all([
+
+      // Top 10 lessons by view_count, with course title
+      pool.query(`
+        SELECT
+          l.id,
+          l.title_ar                          AS title,
+          l.view_count,
+          c.title_ar                          AS course_title
+        FROM lessons l
+        JOIN sections s ON s.id = l.section_id
+        JOIN courses  c ON c.id = s.course_id
+        ORDER BY l.view_count DESC
+        LIMIT 10
+      `),
+
+      // Summary: total views, top course by views, attachment count
+      pool.query(`
+        SELECT
+          COALESCE(SUM(l.view_count), 0)::INTEGER                         AS total_views,
+          COUNT(CASE WHEN l.attachment_url IS NOT NULL THEN 1 END)::INTEGER AS total_attachments,
+          (
+            SELECT c2.title_ar
+            FROM lessons l2
+            JOIN sections s2 ON s2.id = l2.section_id
+            JOIN courses  c2 ON c2.id = s2.course_id
+            GROUP BY c2.id, c2.title_ar
+            ORDER BY SUM(l2.view_count) DESC
+            LIMIT 1
+          ) AS top_course
+        FROM lessons l
+      `),
+    ]);
+
+    return res.json({
+      topLessons: topLessonsResult.rows,
+      summary:    summaryResult.rows[0],
+    });
+  } catch (err) {
+    console.error('[getLessonsAnalytics]', err);
+    return res.status(500).json({ ok: false, messageAr: 'حدث خطأ في السيرفر' });
+  }
+}

@@ -325,6 +325,11 @@ export async function ensureMigrations() {
       "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS attachment_url TEXT"
     );
 
+    // ── Lesson view_count ──────────────────────────────────────────────────────
+    await tryStep(client, "lessons.view_count col",
+      "ALTER TABLE lessons ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0"
+    );
+
     // ── 5. Role system migration: convert old lowercase roles to UPPERCASE ─────
     await tryStep(client, "migrate role admin→ADMIN",   `UPDATE users SET role = 'ADMIN'   WHERE role = 'admin'`);
     await tryStep(client, "migrate role user→STUDENT",  `UPDATE users SET role = 'STUDENT' WHERE role = 'user'`);
