@@ -22,6 +22,9 @@ api.interceptors.response.use(
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
       window.location.replace('/login');
+      // Return a never-resolving promise so component catch blocks don't fire
+      // while the page is navigating away.
+      return new Promise(() => {});
     }
     const message =
       err.response?.data?.messageAr ??

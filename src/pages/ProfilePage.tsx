@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../lib/api';
 import { educationalLevelLabel } from '../lib/utils';
 import { RiwaqHeader } from '../app/components/RiwaqHeader';
 import { RiwaqFooter } from '../app/components/RiwaqFooter';
+import { CourseCard } from '../app/components/CourseCard';
+import { Heart } from 'lucide-react';
+
+interface FavoriteCourse {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail_url: string | null;
+  price: string;
+  educational_level: string;
+  category_name: string | null;
+}
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -12,6 +24,16 @@ export function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [favorites, setFavorites] = useState<FavoriteCourse[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(true);
+  const [favoritesError, setFavoritesError] = useState(false);
+
+  useEffect(() => {
+    api.get('/favorites')
+      .then(({ data }) => setFavorites(data.favorites || []))
+      .catch(() => setFavoritesError(true))
+      .finally(() => setLoadingFavorites(false));
+  }, []);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,6 +125,41 @@ export function ProfilePage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Favorites section — always rendered; loading/error states shown inside */}
+          <div className="bg-white rounded-lg shadow-sm border border-border p-6 md:p-8 mb-8">
+            <div className="flex items-center gap-2 mb-6">
+              <Heart className="w-5 h-5 text-red-500" fill="currentColor" />
+              <h2 className="text-xl md:text-2xl">مفضلاتي</h2>
+            </div>
+
+            {loadingFavorites ? (
+              <div className="flex justify-center py-6">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : favoritesError ? (
+              <p className="text-muted-foreground text-sm">تعذّر تحميل المفضلة، حاول مجدداً لاحقاً.</p>
+            ) : favorites.length === 0 ? (
+              <p className="text-muted-foreground text-sm">لم تضف أي دورة إلى مفضلتك بعد.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {favorites.map((course) => (
+                  <CourseCard
+                    key={course.id}
+                    id={course.id}
+                    title={course.title}
+                    description={course.description}
+                    price={course.price}
+                    thumbnail_url={course.thumbnail_url}
+                    educational_level={course.educational_level}
+                    category_name={course.category_name ?? undefined}
+                    showFavorite={true}
+                    isFavorited={true}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-lg shadow-sm border border-border p-6 md:p-8">
