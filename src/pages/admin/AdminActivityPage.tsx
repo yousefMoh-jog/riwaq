@@ -43,7 +43,7 @@ function relativeTime(ts: string): string {
   }
   const d = Math.floor(diff / 86400);
   if (d < 30) return `منذ ${d} يوم`;
-  return new Date(ts).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' });
+  return new Date(ts).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 
 function buildDescription(event: ActivityEvent): string {
@@ -149,7 +149,7 @@ export function AdminActivityPage() {
             <div>
               <h1 className="text-3xl text-gray-900 dark:text-white">سجل النشاط</h1>
               <p className="text-gray-500 dark:text-slate-400 text-sm mt-0.5">
-                {total > 0 ? `${total.toLocaleString('ar-EG')} حدث مسجّل` : 'جميع أحداث المنصة'}
+                {total > 0 ? `${total.toLocaleString('en-US')} حدث مسجّل` : 'جميع أحداث المنصة'}
               </p>
             </div>
           </div>

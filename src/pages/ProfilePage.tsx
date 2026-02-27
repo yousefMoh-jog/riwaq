@@ -186,7 +186,7 @@ export function ProfilePage() {
               {user.createdAt && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs bg-white/10 text-white/80 border border-white/10">
                   <Calendar size={11} />
-                  عضو منذ {new Date(user.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long' })}
+                  عضو منذ {new Date(user.createdAt).toLocaleDateString('ar', { month: 'long' })} {new Date(user.createdAt).getFullYear()}
                 </span>
               )}
               {user.educationalLevel && (

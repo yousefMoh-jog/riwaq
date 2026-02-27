@@ -169,7 +169,7 @@ export function DashboardPage() {
               <h3 className="text-sm text-gray-500 dark:text-slate-400 mb-2">تاريخ الانضمام</h3>
               <p className="text-lg text-gray-900 dark:text-slate-100">
                 {user.createdAt
-                  ? new Date(user.createdAt).toLocaleDateString('ar-EG', {
+                  ? new Date(user.createdAt).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'

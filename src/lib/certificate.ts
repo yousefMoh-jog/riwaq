@@ -18,11 +18,12 @@ export function downloadCertificate({
   courseTitle,
   completionDate = new Date(),
 }: CertificateOptions): void {
-  const dateStr = completionDate.toLocaleDateString('ar-EG', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  // Arabic month names + Latin (English) digits — looks professional on Arabic certificates
+  const ARABIC_MONTHS = [
+    'يناير','فبراير','مارس','أبريل','مايو','يونيو',
+    'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر',
+  ];
+  const dateStr = `${completionDate.getDate()} ${ARABIC_MONTHS[completionDate.getMonth()]} ${completionDate.getFullYear()}`;
 
   const html = /* html */ `
 <!DOCTYPE html>

@@ -104,7 +104,7 @@ function RevenueTooltip({ active, payload, label }: {
   return (
     <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg px-3 py-2 shadow-lg text-sm">
       <p className="font-semibold text-gray-900 dark:text-white mb-1">{label}</p>
-      <p className="text-[#3B2F82] dark:text-[#8478C9]">{Number(payload[0].value).toLocaleString('ar-EG')} د.ل</p>
+      <p className="text-[#3B2F82] dark:text-[#8478C9]">{Number(payload[0].value).toLocaleString('en-US')} د.ل</p>
     </div>
   );
 }
@@ -133,7 +133,7 @@ function ViewsTooltip({ active, payload }: {
     <div className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 shadow-xl text-sm max-w-[220px]">
       <p className="font-semibold text-white truncate">{row.title}</p>
       <p className="text-slate-400 text-xs truncate">{row.course_title}</p>
-      <p className="text-cyan-400 font-bold mt-1">{value.toLocaleString('ar-EG')} مشاهدة</p>
+      <p className="text-cyan-400 font-bold mt-1">{value.toLocaleString('en-US')} مشاهدة</p>
     </div>
   );
 }
@@ -178,21 +178,21 @@ export function AdminAnalyticsPage() {
   const statCards = summary ? [
     {
       label: 'إجمالي الإيرادات',
-      value: `${Number(summary.total_revenue).toLocaleString('ar-EG')} د.ل`,
+      value: `${Number(summary.total_revenue).toLocaleString('en-US')} د.ل`,
       icon: DollarSign,
       bg: 'bg-green-50 dark:bg-green-900/20',
       iconColor: 'text-green-600 dark:text-green-400',
     },
     {
       label: 'إجمالي التسجيلات',
-      value: Number(summary.total_enrollments).toLocaleString('ar-EG'),
+      value: Number(summary.total_enrollments).toLocaleString('en-US'),
       icon: Users,
       bg: 'bg-blue-50 dark:bg-blue-900/20',
       iconColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       label: 'الدورات المنشورة',
-      value: Number(summary.active_courses).toLocaleString('ar-EG'),
+      value: Number(summary.active_courses).toLocaleString('en-US'),
       icon: BookOpen,
       bg: 'bg-purple-50 dark:bg-purple-900/20',
       iconColor: 'text-purple-600 dark:text-purple-400',
@@ -257,7 +257,7 @@ export function AdminAnalyticsPage() {
                 <div>
                   <p className="text-xs text-slate-400">إجمالي المشاهدات</p>
                   <p className="text-2xl font-bold text-white mt-0.5">
-                    {Number(lessonsData?.summary.total_views ?? 0).toLocaleString('ar-EG')}
+                    {Number(lessonsData?.summary.total_views ?? 0).toLocaleString('en-US')}
                   </p>
                 </div>
               </div>
@@ -283,7 +283,7 @@ export function AdminAnalyticsPage() {
                 <div>
                   <p className="text-xs text-slate-400">دروس تحتوي مرفقات</p>
                   <p className="text-2xl font-bold text-white mt-0.5">
-                    {Number(lessonsData?.summary.total_attachments ?? 0).toLocaleString('ar-EG')}
+                    {Number(lessonsData?.summary.total_attachments ?? 0).toLocaleString('en-US')}
                   </p>
                 </div>
               </div>
@@ -315,6 +315,7 @@ export function AdminAnalyticsPage() {
                       axisLine={false}
                       tickLine={false}
                       allowDecimals={false}
+                      tickFormatter={(v: number) => v.toLocaleString('en-US')}
                     />
                     <YAxis
                       type="category"
@@ -390,7 +391,7 @@ export function AdminAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:[&>line]:stroke-slate-700" />
                   <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={55}
-                    tickFormatter={(v) => v.toLocaleString('ar-EG')} />
+                    tickFormatter={(v) => v.toLocaleString('en-US')} />
                   <Tooltip content={<RevenueTooltip />} />
                   <Area
                     type="monotone" dataKey="revenue"

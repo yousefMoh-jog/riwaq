@@ -145,6 +145,10 @@
   body {
     @apply bg-background text-foreground;
     transition: background-color 0.3s ease, color 0.25s ease;
+    /* Force English (Latin) numerals platform-wide — prevents browsers with
+       Arabic/RTL system locale from rendering digits as ٠١٢٣ */
+    font-feature-settings: "lnum" 1, "tnum" 1;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 
   /**

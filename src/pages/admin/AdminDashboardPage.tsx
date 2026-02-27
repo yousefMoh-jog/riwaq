@@ -77,7 +77,7 @@ export function AdminDashboardPage() {
   const statCards = [
     {
       label: 'إجمالي المستخدمين',
-      value: stats?.totalUsers?.toLocaleString('ar-EG') ?? '—',
+      value: stats?.totalUsers?.toLocaleString('en-US') ?? '—',
       icon: Users,
       iconColor: 'text-blue-600 dark:text-blue-400',
       bg: 'bg-blue-50 dark:bg-blue-900/20',
@@ -85,7 +85,7 @@ export function AdminDashboardPage() {
     },
     {
       label: 'إجمالي الدورات',
-      value: stats?.totalCourses?.toLocaleString('ar-EG') ?? '—',
+      value: stats?.totalCourses?.toLocaleString('en-US') ?? '—',
       icon: BookOpen,
       iconColor: 'text-green-600 dark:text-green-400',
       bg: 'bg-green-50 dark:bg-green-900/20',
@@ -93,7 +93,7 @@ export function AdminDashboardPage() {
     },
     {
       label: 'الطلاب المسجّلون',
-      value: stats?.totalStudents?.toLocaleString('ar-EG') ?? '—',
+      value: stats?.totalStudents?.toLocaleString('en-US') ?? '—',
       icon: GraduationCap,
       iconColor: 'text-purple-600 dark:text-purple-400',
       bg: 'bg-purple-50 dark:bg-purple-900/20',
@@ -102,7 +102,7 @@ export function AdminDashboardPage() {
     {
       label: 'إجمالي الإيرادات',
       value: stats
-        ? `${Number(stats.totalRevenue).toLocaleString('ar-EG')} د.ل`
+        ? `${Number(stats.totalRevenue).toLocaleString('en-US')} د.ل`
         : '—',
       icon: DollarSign,
       iconColor: 'text-orange-600 dark:text-orange-400',
@@ -224,12 +224,12 @@ export function AdminDashboardPage() {
                           </td>
                           <td className="px-6 py-4">
                             <span className="inline-flex items-center gap-1 font-semibold text-green-700 dark:text-green-400">
-                              {Number(sale.price || 0).toLocaleString('ar-EG')}
+                              {Number(sale.price || 0).toLocaleString('en-US')}
                               <span className="text-xs font-normal text-gray-400 dark:text-slate-500">د.ل</span>
                             </span>
                           </td>
                           <td className="px-6 py-4 text-gray-500 dark:text-slate-400">
-                            {new Date(sale.purchase_date).toLocaleDateString('ar-EG', {
+                            {new Date(sale.purchase_date).toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'short',
                               day: 'numeric',
@@ -262,7 +262,7 @@ function WelcomeBanner({
   todaySales: { count: number; revenue: number } | null;
 }) {
   const now = new Date();
-  const todayLabel = now.toLocaleDateString('ar-EG', {
+  const todayLabel = now.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -317,7 +317,7 @@ function WelcomeBanner({
           ) : (
             <div>
               <p className="text-white text-3xl font-bold tabular-nums">
-                {Number(todaySales.revenue).toLocaleString('ar-EG')}
+                {Number(todaySales.revenue).toLocaleString('en-US')}
                 <span className="text-base font-normal text-white/70 mr-1">د.ل</span>
               </p>
               <p className="text-white/70 text-xs mt-1">

@@ -132,7 +132,9 @@ export function CourseCard({
 
         <div className="flex items-center justify-between">
           {price !== '' && price !== undefined && (
-            <span className="text-2xl font-bold text-[#3B2F82] dark:text-[#8478C9]">{price} د.ل</span>
+            <span className="text-2xl font-bold text-[#3B2F82] dark:text-[#8478C9]">
+              {new Intl.NumberFormat('en-US').format(Number(price))} د.ل
+            </span>
           )}
           <Link
             to={`/course/${id}`}

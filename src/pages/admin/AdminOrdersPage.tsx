@@ -58,7 +58,7 @@ export function AdminOrdersPage() {
           <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/30 rounded-lg px-5 py-3 text-right">
             <p className="text-xs text-green-600 dark:text-green-400 mb-0.5">إجمالي الإيرادات</p>
             <p className="text-2xl font-bold text-green-700 dark:text-green-400">
-              {totalRevenue.toLocaleString('ar-EG')} <span className="text-base font-normal">د.ل</span>
+              {totalRevenue.toLocaleString('en-US')} <span className="text-base font-normal">د.ل</span>
             </p>
           </div>
         </div>
@@ -113,12 +113,12 @@ export function AdminOrdersPage() {
                       <td className="px-6 py-4 text-gray-700 dark:text-slate-300">{enrollment.course_title || 'غير محدد'}</td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center gap-1 font-medium text-green-700 dark:text-green-400">
-                          {Number(enrollment.price || 0).toLocaleString('ar-EG')}
+                          {Number(enrollment.price || 0).toLocaleString('en-US')}
                           <span className="text-xs text-gray-400 dark:text-slate-500 font-normal">د.ل</span>
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 dark:text-slate-400">
-                        {new Date(enrollment.purchase_date).toLocaleDateString('ar-EG', {
+                        {new Date(enrollment.purchase_date).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',

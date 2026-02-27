@@ -153,7 +153,7 @@ export function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground">
-                        {new Date(u.created_at).toLocaleDateString('ar-EG', {
+                        {new Date(u.created_at).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',

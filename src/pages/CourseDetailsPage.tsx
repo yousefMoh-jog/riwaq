@@ -577,7 +577,7 @@ export function CourseDetailsPage() {
                             <p className="text-sm text-muted-foreground leading-relaxed pr-10">{r.comment}</p>
                           )}
                           <p className="text-xs text-muted-foreground/60 pr-10 mt-1">
-                            {new Date(r.created_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' })}
+                            {new Date(r.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}
                           </p>
                         </div>
                       ))}
