@@ -112,6 +112,52 @@ export function LessonViewerPage() {
     if (!isAuthenticated) navigate('/login', { replace: true });
   }, [isAuthenticated]);
 
+  // ── Video protection layer ──────────────────────────────────────────────
+  // Runs once on mount; captures are used so handlers fire before the page
+  // or player can act on the event.
+  useEffect(() => {
+    // 1. Block F12 / Ctrl+S / Ctrl+P / common DevTools shortcuts
+    const blockKeys = (e: KeyboardEvent) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      const key  = e.key.toLowerCase();
+      if (
+        e.key  === 'F12' ||
+        (ctrl &&  key === 's') ||          // Save page
+        (ctrl &&  key === 'p') ||          // Print
+        (ctrl && e.shiftKey && key === 'i') || // DevTools (Chrome/Edge)
+        (ctrl && e.shiftKey && key === 'j') || // Console  (Chrome/Edge)
+        (ctrl && e.shiftKey && key === 'c')    // Inspector
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    // 2. Pause HLS video when tab/window becomes hidden (best-effort
+    //    screen-recording deterrence — works on iOS, Android, PC).
+    const onVisibilityChange = () => {
+      if (document.hidden && videoRef.current) {
+        videoRef.current.pause();
+      }
+    };
+
+    // 3. Also pause on window blur (e.g. alt-tab, mission control)
+    const onBlur = () => {
+      if (videoRef.current) videoRef.current.pause();
+    };
+
+    document.addEventListener('keydown',         blockKeys,          { capture: true });
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window .addEventListener('blur',             onBlur);
+
+    return () => {
+      document.removeEventListener('keydown',         blockKeys,          { capture: true });
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window .removeEventListener('blur',             onBlur);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // videoRef is a stable ref — intentionally omitted
+
   // ── Fetch lesson ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!lessonId || !isAuthenticated) return;
@@ -470,7 +516,10 @@ export function LessonViewerPage() {
         <div className="flex-1 flex flex-col overflow-y-auto">
 
           {/* Video Player */}
-          <div className="w-full bg-black">
+          <div
+            className="w-full bg-black"
+            onContextMenu={(e) => e.preventDefault()}
+          >
             <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
               {streamError ? (
                 /* ── Stream / auth error ───────────────────────────── */
@@ -510,8 +559,9 @@ export function LessonViewerPage() {
                   ref={videoRef}
                   controls
                   playsInline
+                  disablePictureInPicture
                   className="absolute inset-0 w-full h-full"
-                  controlsList="nodownload"
+                  controlsList="nodownload noremoteplayback"
                   onEnded={() => {
                     console.log('[Player] ✅ HLS video ended — auto-completing lesson');
                     markLessonComplete();
@@ -520,6 +570,14 @@ export function LessonViewerPage() {
                 >
                   متصفحك لا يدعم تشغيل الفيديو
                 </video>
+              )}
+
+              {/* ── Dynamic Watermark — shown whenever real content is playing ── */}
+              {!streamError && (embedUrl || streamUrl) && user && (
+                <VideoWatermark
+                  email={user.email ?? user.phone ?? ''}
+                  userId={user.id}
+                />
               )}
             </div>
           </div>
@@ -801,6 +859,78 @@ function StudyHeader({
         <span className="text-xs">القائمة</span>
       </button>
     </header>
+  );
+}
+
+// ── VideoWatermark ────────────────────────────────────────────────────────────
+//
+// Renders the user's email + truncated ID at 15% opacity over the video.
+// Position jumps to a new random location every 45 s with a smooth CSS
+// transition so it doesn't startle the viewer.
+//
+// Performance notes:
+//  • pointer-events: none   — zero interaction cost
+//  • will-change: transform — browser hoists to its own composite layer
+//  • transition runs on the GPU (top/left are layout props; we use a CSS
+//    translate instead to keep it on the compositor thread)
+
+function VideoWatermark({ email, userId }: { email: string; userId: string }) {
+  const [pos, setPos] = useState({ top: 15, left: 15 });
+
+  useEffect(() => {
+    const move = () =>
+      setPos({
+        top:  10 + Math.random() * 65, // 10 % – 75 %
+        left:  5 + Math.random() * 55, // 5 %  – 60 %
+      });
+
+    move(); // randomise immediately on mount
+    const timer = setInterval(move, 45_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <div
+      className="absolute inset-0 z-10 overflow-hidden"
+      style={{ pointerEvents: 'none', userSelect: 'none', WebkitUserSelect: 'none' }}
+      aria-hidden="true"
+    >
+      <div
+        style={{
+          position:   'absolute',
+          top:        `${pos.top}%`,
+          left:       `${pos.left}%`,
+          // Smooth drift — runs on compositor, no layout recalc
+          transition: 'top 2.5s ease-in-out, left 2.5s ease-in-out',
+          willChange: 'top, left',
+
+          opacity:    0.15,
+          color:      '#ffffff',
+          // clamp keeps text readable on 5" phones and avoids blocking on big screens
+          fontSize:   'clamp(9px, 1.4vw, 13px)',
+          fontFamily: '"Courier New", Courier, monospace',
+          fontWeight: 700,
+          lineHeight: 1.6,
+          // Outline shadow ensures visibility on both light and dark frames
+          textShadow: '0 0 4px rgba(0,0,0,1), 0 0 8px rgba(0,0,0,0.8)',
+          pointerEvents:       'none',
+          userSelect:          'none',
+          // @ts-ignore – vendor prefix
+          WebkitUserSelect:    'none',
+          maxWidth:   '45%',
+          wordBreak:  'break-all',
+        }}
+      >
+        {/* Email line — slightly smaller on narrow screens */}
+        <div style={{ fontSize: 'clamp(8px, 1.2vw, 12px)' }}>
+          {email}
+        </div>
+        {/* Truncated user-ID — gives forensic uniqueness without overwhelming */}
+        <div style={{ fontSize: 'clamp(7px, 1vw, 11px)', opacity: 0.85 }}>
+          {userId.slice(0, 8).toUpperCase()}
+        </div>
+      </div>
+    </div>
   );
 }
 
